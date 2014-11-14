@@ -6,6 +6,7 @@
 package com.phante.sarabandasaloon;
 
 import com.phante.sarabandasaloon.network.UDPServer;
+import com.phante.sarabandasaloon.network.UDPServerService;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -28,8 +29,11 @@ public class SarabandaSaloon extends Application {
         primaryStage.show();
         
         // Inizializza il server UDP
-        Thread sarabandaSaloonServer = new Thread(UDPServer.getInstance());
-        sarabandaSaloonServer.start();
+        //Thread sarabandaSaloonServer = new Thread(UDPServer.getInstance());
+        //sarabandaSaloonServer.start();
+        
+        UDPServerService udpservice = new UDPServerService();
+        udpservice.start();
     }
 
     /**
