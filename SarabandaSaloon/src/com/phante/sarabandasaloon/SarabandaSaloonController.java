@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.phante;
+package com.phante.sarabandasaloon;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -17,8 +17,11 @@ import javafx.scene.control.Label;
  * @author deltedes
  */
 public class SarabandaSaloonController implements Initializable{
-    @FXML
     private Label label;
+    @FXML
+    private Label mainLabel;
+    @FXML
+    private Label mainLabel1;
         
     @FXML
     private void handleButtonAction(ActionEvent event) {
