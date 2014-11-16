@@ -18,40 +18,44 @@ import javafx.concurrent.Task;
  *
  * @author deltedes
  */
-public class UDPServerService extends Service<String> {
+public class UDPServerService extends Service<Void> {
 
-    private DatagramSocket socket;
-
+    private int port = 5005;
+    
     /**
      *
      * @return
      */
     @Override
-    protected Task<String> createTask() {
+    protected Task<Void> createTask() {
 
-        return new Task<String>() {
+        return new Task<Void>() {
             @Override
-            protected String call() {
+            protected Void call() {                
                 try {
-                    //Keep a socket open to listen to all the UDP trafic that is destined for this port
-                    socket = new DatagramSocket(8888, InetAddress.getByName("0.0.0.0"));
+                    // Apre il socket UDP sulla porta di default
+                    DatagramSocket socket = new DatagramSocket(port, InetAddress.getByName("0.0.0.0"));
                     socket.setBroadcast(true);
 
                     while (true) {
                         System.out.println(getClass().getName() + ">>>Ready to receive broadcast packets!");
 
-                        //Receive a packet
+                        // Riceve un pacchetto
                         byte[] recvBuf = new byte[15000];
                         DatagramPacket packet = new DatagramPacket(recvBuf, recvBuf.length);
                         socket.receive(packet);
 
-                        //Packet received
+                        // Pacchetto ricevuto
                         System.out.println(getClass().getName() + ">>>Discovery packet received from: " + packet.getAddress().getHostAddress());
                         System.out.println(getClass().getName() + ">>>Packet received; data: " + new String(packet.getData()));
 
-                        //See if the packet holds the right command (message)
-                        String message = new String(packet.getData()).trim();
-                        if (message.equals("DISCOVER_FUIFSERVER_REQUEST")) {
+                        // Estrare il pacchetto e la stringa relativa per l'uotput (a chissà cosa servirà :-) )
+                        byte[] message = packet.getData();
+                        
+                        // Elabora il pacchetto
+                        
+                        
+                        /*if (message.equals("DISCOVER_FUIFSERVER_REQUEST")) {
                             byte[] sendData = "DISCOVER_FUIFSERVER_RESPONSE".getBytes();
 
                             //Send a response
@@ -59,7 +63,7 @@ public class UDPServerService extends Service<String> {
                             socket.send(sendPacket);
 
                             System.out.println(getClass().getName() + ">>>Sent packet to: " + sendPacket.getAddress().getHostAddress());
-                        }
+                        }*/
                     }
                 } catch (IOException ex) {
                     Logger.getLogger(UDPServer.class.getName()).log(Level.SEVERE, null, ex);
