@@ -66,7 +66,7 @@ public class UDPServerService extends Service<Void> {
                     while (!isCancelled()) {
                         log.log(Level.FINE, "Server is listening");
 
-                        //Receive a packet
+                        // Riceve un pacchetto
                         byte[] recvBuf = new byte[15000];
                         DatagramPacket packet = new DatagramPacket(recvBuf, recvBuf.length);
                         socket.receive(packet);
