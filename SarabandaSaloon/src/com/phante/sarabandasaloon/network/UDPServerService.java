@@ -18,52 +18,69 @@ import javafx.concurrent.Task;
  *
  * @author deltedes
  */
-public class UDPServerService extends Service<String> {
+public class UDPServerService extends Service<Void> {
+
+    private final int udpPort;
+    private final String inetAddress;
+    private final MessageController messageController;
 
     private DatagramSocket socket;
+    private static final Logger log = Logger.getLogger(UDPServerService.class.getName());
 
+    public UDPServerService(MessageController messageController, int udpPort) {
+        this.messageController = messageController;
+        this.udpPort = udpPort;
+        this.inetAddress = "0.0.0.0";
+    }
+
+    /**
+     *
+     * @param messageController
+     * @param udpPort
+     * @param inetAddress
+     */
+    /*public UDPServerService(MessageController messageController, int udpPort, String inetAddress) {
+     this.messageController = messageController;
+     this.udpPort = udpPort;
+     this.inetAddress = inetAddress;
+     }*/
     /**
      *
      * @return
      */
     @Override
-    protected Task<String> createTask() {
+    protected Task<Void> createTask() {
 
-        return new Task<String>() {
+        return new Task<Void>() {
             @Override
-            protected String call() {
+            protected Void call() {
                 try {
+                    log.log(Level.INFO, "Server inizialization");
+                    log.log(Level.INFO, "Server inizialized on " + inetAddress + ":" + udpPort);
+
                     //Keep a socket open to listen to all the UDP trafic that is destined for this port
-                    socket = new DatagramSocket(8888, InetAddress.getByName("0.0.0.0"));
+                    socket = new DatagramSocket(udpPort, InetAddress.getByName(inetAddress));
                     socket.setBroadcast(true);
 
-                    while (true) {
-                        System.out.println(getClass().getName() + ">>>Ready to receive broadcast packets!");
+                    // Rende interrompibile il task
+                    while (!isCancelled()) {
+                        log.log(Level.FINE, "Server is listening");
 
                         //Receive a packet
                         byte[] recvBuf = new byte[15000];
                         DatagramPacket packet = new DatagramPacket(recvBuf, recvBuf.length);
                         socket.receive(packet);
 
-                        //Packet received
-                        System.out.println(getClass().getName() + ">>>Discovery packet received from: " + packet.getAddress().getHostAddress());
-                        System.out.println(getClass().getName() + ">>>Packet received; data: " + new String(packet.getData()));
+                        System.out.println(">>>Packet received from: " + packet.getAddress().getHostAddress());
+                        System.out.println(">>>Packet received; data: " + new String(packet.getData()));
 
-                        //See if the packet holds the right command (message)
-                        String message = new String(packet.getData()).trim();
-                        if (message.equals("DISCOVER_FUIFSERVER_REQUEST")) {
-                            byte[] sendData = "DISCOVER_FUIFSERVER_RESPONSE".getBytes();
-
-                            //Send a response
-                            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, packet.getAddress(), packet.getPort());
-                            socket.send(sendPacket);
-
-                            System.out.println(getClass().getName() + ">>>Sent packet to: " + sendPacket.getAddress().getHostAddress());
-                        }
+                        // Compute the message
+                        messageController.setMessage(new String(packet.getData()), packet.getAddress().getHostAddress());
                     }
                 } catch (IOException ex) {
-                    Logger.getLogger(UDPServer.class.getName()).log(Level.SEVERE, null, ex);
+                    log.log(Level.SEVERE, null, ex);
                 }
+                log.log(Level.INFO, "Server is stopped");
                 return null;
             }
         };

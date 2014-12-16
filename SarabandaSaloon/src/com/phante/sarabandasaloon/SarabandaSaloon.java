@@ -5,8 +5,9 @@
  */
 package com.phante.sarabandasaloon;
 
-import com.phante.sarabandasaloon.network.UDPServer;
-import com.phante.sarabandasaloon.network.UDPServerService;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -18,22 +19,37 @@ import javafx.stage.Stage;
  * @author deltedes
  */
 public class SarabandaSaloon extends Application {
-    
+
     @Override
-    public void start(Stage primaryStage) throws Exception{
+    public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("FXMLDocument.fxml"));
-        
+
         Scene scene = new Scene(root);
-        
+
         primaryStage.setScene(scene);
         primaryStage.show();
-        
-        // Inizializza il server UDP
-        //Thread sarabandaSaloonServer = new Thread(UDPServer.getInstance());
-        //sarabandaSaloonServer.start();
-        
-        UDPServerService udpservice = new UDPServerService();
-        udpservice.start();
+
+        //get the top Logger:
+        Logger topLogger = java.util.logging.Logger.getLogger("");
+
+        // Handler for console (reuse it if it already exists)
+        Handler consoleHandler = null;
+        //see if there is already a console handler
+        for (Handler handler : topLogger.getHandlers()) {
+            if (handler instanceof ConsoleHandler) {
+                //found the console handler
+                consoleHandler = handler;
+                break;
+            }
+        }
+
+        if (consoleHandler == null) {
+            //there was no console handler found, create a new one
+            consoleHandler = new ConsoleHandler();
+            topLogger.addHandler(consoleHandler);
+        }
+        //set the console handler to fine:
+        consoleHandler.setLevel(java.util.logging.Level.FINEST);
     }
 
     /**
@@ -42,5 +58,5 @@ public class SarabandaSaloon extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-    
+
 }
