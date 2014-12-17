@@ -19,13 +19,14 @@ import javafx.concurrent.Task;
  * @author deltedes
  */
 public class UDPServerService extends Service<Void> {
+    
+    private static final Logger log = Logger.getLogger(UDPServerService.class.getName());
 
     private final int udpPort;
     private final String inetAddress;
     private final MessageController messageController;
 
     private DatagramSocket socket;
-    private static final Logger log = Logger.getLogger(UDPServerService.class.getName());
 
     public UDPServerService(MessageController messageController, int udpPort) {
         this.messageController = messageController;
@@ -55,14 +56,13 @@ public class UDPServerService extends Service<Void> {
             @Override
             protected Void call() {
                 try {
-                    log.log(Level.INFO, "Server inizialization");
-                    log.log(Level.INFO, "Server inizialized on " + inetAddress + ":" + udpPort);
+                    log.log(Level.INFO, "Server inizialized on {0}:{1}", new Object[] {inetAddress, udpPort});
 
-                    //Keep a socket open to listen to all the UDP trafic that is destined for this port
+                    // Apre il socket
                     socket = new DatagramSocket(udpPort, InetAddress.getByName(inetAddress));
                     socket.setBroadcast(true);
 
-                    // Rende interrompibile il task
+                    // Lopp principale che controlla lo stato del task e lo rende interrompibile
                     while (!isCancelled()) {
                         log.log(Level.FINE, "Server is listening");
 
@@ -70,12 +70,15 @@ public class UDPServerService extends Service<Void> {
                         byte[] recvBuf = new byte[15000];
                         DatagramPacket packet = new DatagramPacket(recvBuf, recvBuf.length);
                         socket.receive(packet);
-
-                        System.out.println(">>>Packet received from: " + packet.getAddress().getHostAddress());
-                        System.out.println(">>>Packet received; data: " + new String(packet.getData()));
-
-                        // Compute the message
-                        messageController.setMessage(new String(packet.getData()), packet.getAddress().getHostAddress());
+                        
+                        String hostAddress = packet.getAddress().getHostAddress();
+                        String message = new String(packet.getData());
+                        
+                        log.log(Level.FINEST, "Packet received from {0} with {1}", new Object[] {hostAddress, message} );
+                        
+                        // Elabora il messaggio
+                        if (!isCancelled())
+                            messageController.setMessage(message, hostAddress);
                     }
                 } catch (IOException ex) {
                     log.log(Level.SEVERE, null, ex);

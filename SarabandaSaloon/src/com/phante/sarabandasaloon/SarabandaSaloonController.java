@@ -34,8 +34,12 @@ public class SarabandaSaloonController implements Initializable {
     @FXML
     private Label MainLabel;
     
+    private static final Logger log = Logger.getLogger(SarabandaSaloonController.class.getName());
+    
     private MessageController messageController;
     private UDPServerService udpservice;
+    
+    private final static int udpPort = 8888;
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -43,20 +47,30 @@ public class SarabandaSaloonController implements Initializable {
         System.out.println(labelText);
         MainLabel.setText(labelText);
         
-        Logger.getLogger(SarabandaSaloonController.class.getName()).log(Level.INFO, "initialize");
+        log.log(Level.INFO, "initialize");
         
         // Inizializza il Message Controller che andrà a fare il parsing dei messaggi UDP
         messageController = new MessageController();
         
         // Inizializza il server UDP
-        udpservice = new UDPServerService(messageController, 8888);
+        udpservice = new UDPServerService(messageController, udpPort);
     }    
 
     @FXML
     private void ButtonOneAction(ActionEvent event) {
         Logger.getLogger(SarabandaSaloonController.class.getName()).log(Level.INFO, "Start the server");
         ChangeMainLabel("UDP Server start");
-        udpservice.start();
+        
+        log.log(Level.INFO, "Server is running? {0}", udpservice.isRunning());
+
+        // Specifies the current state of this Worker. The initial value is State.READY. 
+        // A Task may be restarted, in which case it will progress from one of these end states (SUCCEEDED, CANCELLED, or FAILED) back to READY and then immediately to SCHEDULED and RUNNING. 
+        // These state transitions may occur immediately one after the other, but will always occur in the prescribed order.
+        
+        if (!udpservice.isRunning()) {
+            udpservice.reset();
+            udpservice.start();
+        }
     }
 
     @FXML
