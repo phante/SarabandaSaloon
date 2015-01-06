@@ -10,7 +10,7 @@
    <children>
       <Label fx:id="MainLabel" layoutX="32.0" layoutY="36.0" prefHeight="104.0" prefWidth="577.0" text="Label" />
       <Button fx:id="ButtonOne" layoutX="32.0" layoutY="206.0" mnemonicParsing="false" onAction="#ButtonOneAction" text="Start UDP Server" />
-      <Button fx:id="ButtonTwo" layoutX="32.0" layoutY="240.0" mnemonicParsing="false" onAction="#ButtonTwoAction" text="Stop UDP Server" />
+      <Button fx:id="ButtonTwo" layoutX="32.0" layoutY="240.0" mnemonicParsing="false" onAction="#ButtonTwoAction" text="ButtonTwo" />
       <Button fx:id="ButtonThree" layoutX="32.0" layoutY="275.0" mnemonicParsing="false" onAction="#ButtonThreeAction" text="ButtonThree" />
       <Button fx:id="ButtonFour" layoutX="32.0" layoutY="309.0" mnemonicParsing="false" onAction="#ButtonFourAction" text="Esci" />
    </children>

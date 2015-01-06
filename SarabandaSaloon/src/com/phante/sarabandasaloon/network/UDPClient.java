@@ -11,6 +11,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,6 +21,31 @@ import java.util.logging.Logger;
  * @author deltedes
  */
 public class UDPClient {
+    
+    /**
+     * Invia un messaggio all'indirizzo specificato
+     * 
+     * @param message 
+     * @param port 
+     * @param destination 
+     */
+    public static void sendPacket(byte[] message, int port, String destination) {
+        DatagramSocket c;
+        try {
+            Logger.getLogger(UDPClient.class.getName()).log(Level.INFO, "Invio pacchetto UDP");
+            c = new DatagramSocket();
+            c.setBroadcast(true);
+            
+            DatagramPacket sendPacket = new DatagramPacket(message, message.length, InetAddress.getByName(destination), port);
+            c.send(sendPacket);
+            
+        } catch (SocketException ex) {
+            Logger.getLogger(UDPClient.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(UDPClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }
 
     public void sendPacket(String sourceMessage) {
         // Find the server using UDP broadcast

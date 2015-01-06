@@ -5,13 +5,12 @@
  */
 package com.phante.sarabandasaloon;
 
-import com.phante.sarabandasaloon.network.MessageController;
-import com.phante.sarabandasaloon.network.UDPServerService;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
+import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -36,10 +35,9 @@ public class SarabandaSaloonController implements Initializable {
     
     private static final Logger log = Logger.getLogger(SarabandaSaloonController.class.getName());
     
-    private MessageController messageController;
-    private UDPServerService udpservice;
-    
-    private final static int udpPort = 8888;
+     // Reference to the main application
+    private SarabandaSaloon mainApp;
+    private boolean switchOne = true;
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -48,39 +46,27 @@ public class SarabandaSaloonController implements Initializable {
         MainLabel.setText(labelText);
         
         log.log(Level.INFO, "initialize");
-        
-        // Inizializza il Message Controller che andrà a fare il parsing dei messaggi UDP
-        messageController = new MessageController();
-        
-        // Inizializza il server UDP
-        udpservice = new UDPServerService(messageController, udpPort);
     }    
 
     @FXML
     private void ButtonOneAction(ActionEvent event) {
-        Logger.getLogger(SarabandaSaloonController.class.getName()).log(Level.INFO, "Start the server");
-        ChangeMainLabel("UDP Server start");
+        if (switchOne) {
+            mainApp.startUDPServer();
+            ButtonOne.setText("Stop Server");
+        } else {
+            mainApp.stopUDPServer();
+            ButtonOne.setText("Start Server");
+        } 
         
-        log.log(Level.INFO, "Server is running? {0}", udpservice.isRunning());
-
-        // Specifies the current state of this Worker. The initial value is State.READY. 
-        // A Task may be restarted, in which case it will progress from one of these end states (SUCCEEDED, CANCELLED, or FAILED) back to READY and then immediately to SCHEDULED and RUNNING. 
-        // These state transitions may occur immediately one after the other, but will always occur in the prescribed order.
-        
-        if (!udpservice.isRunning()) {
-            udpservice.reset();
-            udpservice.start();
-        }
+        switchOne = !switchOne;
     }
 
     @FXML
     private void ButtonTwoAction(ActionEvent event) {
         Logger.getLogger(SarabandaSaloonController.class.getName()).log(Level.INFO, "Stop the server");
-        if (udpservice.cancel()) {
-            ChangeMainLabel("UDP Server stopped");
-        } else {
-            ChangeMainLabel("UDP Server still running");
-        }
+        ChangeMainLabel("UDP Server stop");
+        
+        mainApp.stopUDPServer();
     }
 
     @FXML
@@ -98,5 +84,13 @@ public class SarabandaSaloonController implements Initializable {
     public void ChangeMainLabel(String labelText) {
         System.out.println(labelText);
         MainLabel.setText(labelText);
+    }
+
+    void setMainApp(SarabandaSaloon mainApplication) {
+        this.mainApp = mainApplication;
+    }
+    
+    StringProperty getServerLabelProperty() {
+        return MainLabel.textProperty();
     }
 }
