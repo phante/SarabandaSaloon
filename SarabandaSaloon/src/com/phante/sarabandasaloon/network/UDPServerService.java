@@ -21,16 +21,23 @@ public class UDPServerService extends Service<Void> {
     
     private static final Logger log = Logger.getLogger(UDPServerService.class.getName());
     
+    // Dimensione massima del buffer di ricezione
     private static final int BufferSize = 20;
 
-    private final int udpPort;
+    // Porta udp del server
+    private final int serverUdpPort;
+    
+    // Gestore della comunicazione
     private final MessageController messageController;
 
-    private DatagramSocket socket;
-
+    /**
+     *
+     * @param messageController
+     * @param udpPort 
+     */
     public UDPServerService(MessageController messageController, int udpPort) {
         this.messageController = messageController;
-        this.udpPort = udpPort;
+        this.serverUdpPort = udpPort;
     }
 
     /**
@@ -43,11 +50,14 @@ public class UDPServerService extends Service<Void> {
         return new Task<Void>() {
             @Override
             protected Void call() {
-                try {
+                try {                    
                     // Apre il socket
-                    socket = new DatagramSocket(udpPort);
+                    DatagramSocket socket = new DatagramSocket(serverUdpPort);
                     socket.setBroadcast(true);
                     log.log(Level.INFO, "Server inizialized on {0}:{1}", new Object[] {socket.getLocalAddress().getHostAddress(), socket.getLocalPort()} );
+                    
+                    // Indica al message controller che va online
+                    messageController.goOnline();
 
                     // Loop principale che controlla lo stato del task e lo rende interrompibile
                     while (!isCancelled()) {
@@ -63,11 +73,16 @@ public class UDPServerService extends Service<Void> {
                         
                         log.log(Level.INFO, "Message {1} received from {0}", new Object[] {hostAddress, new String(message)} );
                         
-                        // Elabora il messaggio
                         if (!isCancelled()) {
+                            // Elabora il messaggio
                             messageController.setMessage(message, hostAddress);
                         } else {
+                            // Ingora il messaggio e chiude il servizio
                             log.log(Level.INFO, "Server stop request, ignore the message");
+
+                            // Comunica al messageController di andare offline
+                            messageController.goOffline();
+                            
                             // Chiude il socket
                             socket.close();
                         }
@@ -80,4 +95,5 @@ public class UDPServerService extends Service<Void> {
             }
         };
     }
+            
 }

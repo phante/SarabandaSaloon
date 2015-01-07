@@ -20,23 +20,46 @@ public class MessageController {
     
     private static final Logger log = Logger.getLogger(MessageController.class.getName());
     
+    // Costanti di messaggio
+    public static final byte MAGIC_NUMBER = 'S';
+    public static final byte NULL = '.';
+    public static final byte MASTER_START = 'M';
+    public static final byte SLAVE_REGISTRATION = 'R';
+    public static final byte SLAVE_REGISTRATION_OK = 'O';
+    public static final byte SLAVE_DEREGISTRATION = 'D';
+    public static final byte BUTTON = 'B';
+
+
+    // Porta UDP del protocollo di comunicazione
+    private final int destinationUDPPort;
+        
     // Memorizza l'ultimo messaggio
     private byte[] lastMessage;
     private String lastSender;
     
     // Memorizza le informazioni della rete
     private String masterIP;
-    private HashMap<String, String> slaveArray = new HashMap<String, String>();
+    private final HashMap<String, String> slaveArray = new HashMap<>();
     
     // Identifica se lo slave è registrato dal master
     private boolean isRegistered = false;
     
-    // Properry per l'interfacciamento con la gui
+    // Property per l'interfacciamento con la gui
     public StringProperty outMessage = new SimpleStringProperty();
     
-    /*
+    /**
+     * 
+     * @param udpPort 
+     */
+    public MessageController(int udpPort) {
+        destinationUDPPort = udpPort;
+    }
     
-    */
+    /**
+     * Effettua il parsing del messaggio ed agisce di conseguenza
+     * @param message
+     * @param sender 
+     */
     public void setMessage(byte[] message, String sender) {
         lastMessage = message;
         lastSender = sender; 
@@ -44,7 +67,7 @@ public class MessageController {
         log.log(Level.INFO, "Packet received from {0} with \"{1}\"", new Object[] {sender, new String(lastMessage)} );
         
         Platform.runLater(() -> {
-        outMessage.set(lastSender + " ha inviato un messaggio");
+            outMessage.set(lastSender + " ha inviato un messaggio");
         });
 
         // CONTROLLO RICEZIONE PACCHETTO
@@ -56,7 +79,7 @@ public class MessageController {
         int magicNumber = lastMessage[0];
        
         //Controllo minimale per identificare i pacchetti del Sarabanda
-        if (magicNumber == 0x53) {
+        if (magicNumber == MAGIC_NUMBER) {
             int packetType = lastMessage[1];
 
             log.log(Level.INFO, "Packet magic is 0x{0} from host {1} with command type 0x{2}", new Object[] {
@@ -68,30 +91,35 @@ public class MessageController {
 
             //Identifica il tipo di comando ricevuto
             // Tipo comando
-            // 0x01 MASTER START - inviato dal master in fase di avvio, richiede la registrazione degli SLAVE
-            // 0x02 SLAVE REGISTRATION - inviato dagli slave per avvisare della loro connessione
-            // 0x03 SLAVE REGISTRATION OK
-            // 0x04 SLAVE DEREGISTRATION
-            // 0x05 BUTTON
+            // M - MASTER START - inviato dal master in fase di avvio, richiede la registrazione degli SLAVE
+            // R - SLAVE REGISTRATION - inviato dagli slave per avvisare della loro connessione
+            // O - SLAVE REGISTRATION OK
+            // D - SLAVE DEREGISTRATION
+            // B - BUTTON
             
             switch (packetType) {
-                case 0x01: // MASTER START
+                case MASTER_START: // MASTER START
                     // Salva l'IP del master
                     masterIP = lastSender;
                     isRegistered = false;
                     Platform.runLater(() -> {
                         outMessage.set(lastSender + " ha segnalato che è il master");
                     });
-                    // TODO Invia un pacchetto di registrazione dello SLAVE
+                    
+                    // Inoltra in broadcast il messaggio di registrazione come slave
+                    byte[] registrationMessage = {MAGIC_NUMBER, SLAVE_REGISTRATION};
+                    UDPClient.sendPacket(registrationMessage, destinationUDPPort, "255.255.255.255");
+                    
                     break;
-                case 0x02: // SLAVE REGISTRATION
-                    // Uno slave ha richiesto la registrazione
+                case SLAVE_REGISTRATION: // SLAVE REGISTRATION
+                    // Uno slave ha richiesto la registrazione e lo memorizzo
                     slaveArray.put(lastSender, "registred");
                     Platform.runLater(() -> {
-                    outMessage.set(lastSender + " è stato registrato come slave");
+                        outMessage.set(lastSender + " è stato registrato come slave");
                     });
+                    
                     break;
-                case 0x03: // SLAVE REGISTRATION OK
+                case SLAVE_REGISTRATION_OK: // SLAVE REGISTRATION OK
                     // Verifica che il master abbia accettato la registrazione 
                     if (sender.compareTo(masterIP) == 0) {
                         Platform.runLater(() -> {
@@ -100,13 +128,13 @@ public class MessageController {
                         isRegistered = true;
                     }
                     break;
-                case 0x04: // SLAVE DEREGISTRATION
-                    // Uno slave si è spento
+                case SLAVE_DEREGISTRATION: // SLAVE DEREGISTRATION
+                    // Uno slave si è spento, lo rimuovo dalla lista
                     slaveArray.remove(lastSender);
                     Platform.runLater(() -> {
                         outMessage.set(lastSender + " è stato rimosso dalla rete");
                     });
-                case 0x05: // BUTTON
+                case BUTTON: // BUTTON
                     // Pacchetto pulsanti
                     if (sender.compareTo(masterIP) == 0) {
                         // Ho ricevuto uno stato pulsanti dal master
@@ -120,4 +148,23 @@ public class MessageController {
         }
         log.log(Level.INFO, "Fine del setMessage");
     }
+
+    /**
+     * Comunica alla rete la registrazione del server
+     */
+    public void goOnline() {
+        // Inoltra in broadcast il messaggio di registrazione come slave
+        byte[] registrationMessage = {MAGIC_NUMBER, SLAVE_REGISTRATION};
+        UDPClient.sendPacket(registrationMessage, destinationUDPPort, "255.255.255.255");
+    }
+
+    /**
+     * Comunica alla rete lo spegnimento dello slave
+     */
+    public void goOffline() {        
+        // Invia in broadcast il messaggio di deregistrazione dello slave
+        byte[] nullMessage = {MAGIC_NUMBER, SLAVE_DEREGISTRATION};
+        UDPClient.sendPacket(nullMessage, destinationUDPPort, "255.255.255.255");
+    }
+
 }
