@@ -8,12 +8,17 @@ package com.phante.sarabandasaloon;
 import com.phante.sarabandasaloon.network.MessageController;
 import com.phante.sarabandasaloon.network.UDPClient;
 import com.phante.sarabandasaloon.network.UDPServerService;
+import com.phante.sarabandasaloon.view.RootController;
 import javafx.application.Application;
 import javafx.concurrent.Worker.State;
 import javafx.fxml.FXMLLoader;
+
+import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
+
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 /**
@@ -29,38 +34,30 @@ public class SarabandaSaloon extends Application {
     private final static int udpListenPort = 8888;
     // Porta di invio
     private final static int udpSenderPort = 8888;
-    
-    private MessageController messageController;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         // Inizializza la finestra principale
-        FXMLLoader rootloader = new FXMLLoader(getClass().getResource("view/RootLayout.fxml"));
-        BorderPane rootLayout = (BorderPane) rootloader.load();
+        FXMLLoader rootloader = new FXMLLoader(getClass().getResource("view/Root.fxml"));
+        Pane rootLayout = rootloader.load();
+        ((RootController)rootloader.getController()).setStage(primaryStage);
 
         Scene scene = new Scene(rootLayout);
-
-        primaryStage.setTitle("Sarabanda Saloon");
         
+        primaryStage.setTitle("Sarabanda Saloon");        
         primaryStage.setScene(scene);
+        primaryStage.setMinHeight(600);
+        primaryStage.setMinWidth(800);
         primaryStage.show();
-        
-        // Carica il pannello di gestione all'interno della finestra principale
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("view/FXMLDocument.fxml"));
-        AnchorPane overviewPage = (AnchorPane) loader.load();
-        rootLayout.setCenter(overviewPage);
-            
-        SarabandaSaloonController controller = loader.getController();
-        controller.setMainApp(this);
-        
+
         // Inizializza il Message Controller che andrà a fare il parsing dei messaggi UDP
-        messageController = new MessageController(udpSenderPort);
+        //messageController = new MessageController(udpSenderPort);
         
         // Associa la label della gui con la proprietà del Message Controller
-        controller.getServerLabelProperty().bind(messageController.outMessage);
+        //controller.getServerLabelProperty().bind(messageController.outMessage);
         
         // Inizializza il server UDP e ci associa il Message Controller
-        udpservice = new UDPServerService(messageController, udpListenPort);
+        //udpservice = new UDPServerService(messageController, udpListenPort);
     }
     
     /**

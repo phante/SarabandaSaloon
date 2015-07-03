@@ -3,13 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.phante.sarabandasaloon;
+package com.phante.sarabandasaloon.view;
 
+import com.phante.sarabandasaloon.SarabandaSaloon;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -21,7 +23,7 @@ import javafx.scene.control.Label;
  *
  * @author deltedes
  */
-public class SarabandaSaloonController implements Initializable {
+public class NetworkController implements Initializable {
     @FXML
     private Button ButtonOne;
     @FXML
@@ -33,7 +35,9 @@ public class SarabandaSaloonController implements Initializable {
     @FXML
     private Label MainLabel;
     
-    private static final Logger log = Logger.getLogger(SarabandaSaloonController.class.getName());
+    private StringProperty statusMessage = new SimpleStringProperty();
+    
+    private static final Logger log = Logger.getLogger(NetworkController.class.getName());
     
      // Reference to the main application
     private SarabandaSaloon mainApp;
@@ -63,7 +67,7 @@ public class SarabandaSaloonController implements Initializable {
 
     @FXML
     private void ButtonTwoAction(ActionEvent event) {
-        Logger.getLogger(SarabandaSaloonController.class.getName()).log(Level.INFO, "Stop the server");
+        Logger.getLogger(NetworkController.class.getName()).log(Level.INFO, "Stop the server");
         ChangeMainLabel("UDP Server stop");
         
         mainApp.stopUDPServer();
@@ -71,13 +75,13 @@ public class SarabandaSaloonController implements Initializable {
 
     @FXML
     private void ButtonThreeAction(ActionEvent event) {
-        Logger.getLogger(SarabandaSaloonController.class.getName()).log(Level.INFO, "exit");
+        Logger.getLogger(NetworkController.class.getName()).log(Level.INFO, "exit");
         ChangeMainLabel("Button Three, You clicked me!");
     }
 
     @FXML
     private void ButtonFourAction(ActionEvent event) {
-        Logger.getLogger(SarabandaSaloonController.class.getName()).log(Level.INFO, "exit");
+        Logger.getLogger(NetworkController.class.getName()).log(Level.INFO, "exit");
         Platform.exit();
     }
     
@@ -92,5 +96,13 @@ public class SarabandaSaloonController implements Initializable {
     
     StringProperty getServerLabelProperty() {
         return MainLabel.textProperty();
+    }
+    
+    /**
+     * 
+     * @return 
+     */
+    public StringProperty statusProperty() {
+        return this.statusMessage;
     }
 }
