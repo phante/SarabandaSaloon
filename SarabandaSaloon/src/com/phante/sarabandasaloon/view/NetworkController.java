@@ -5,104 +5,94 @@
  */
 package com.phante.sarabandasaloon.view;
 
-import com.phante.sarabandasaloon.SarabandaSaloon;
+import com.phante.sarabandasaloon.network.SarabandaController;
 import java.net.URL;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.event.ActionEvent;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.scene.control.CheckBox;
 
 /**
  *
  * @author deltedes
  */
 public class NetworkController implements Initializable {
+
     @FXML
-    private Button ButtonOne;
+    private CheckBox button1 = new CheckBox();
     @FXML
-    private Button ButtonTwo;
+    private CheckBox button2 = new CheckBox();
     @FXML
-    private Button ButtonThree;
+    private CheckBox button3 = new CheckBox();
     @FXML
-    private Button ButtonFour;
+    private CheckBox button4 = new CheckBox();
     @FXML
-    private Label MainLabel;
+    private CheckBox serverStatus = new CheckBox();
     
-    private StringProperty statusMessage = new SimpleStringProperty();
-    
-    private static final Logger log = Logger.getLogger(NetworkController.class.getName());
-    
-     // Reference to the main application
-    private SarabandaSaloon mainApp;
-    private boolean switchOne = true;
-    
+    private ChangeListener<Number> serverStatusChangeListener;
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        String labelText = "Waiting for an action ...";
-        System.out.println(labelText);
-        MainLabel.setText(labelText);
+        ReadOnlyIntegerProperty status = SarabandaController.getInstance().serverStatusProperty();
+
+        serverStatusChangeListener = (ObservableValue<? extends Number> observableValue, Number oldValue, Number newValue) -> {
+            switch (newValue.intValue()) {
+                case SarabandaController.SERVER_STARTED: 
+                    serverStatus.setIndeterminate(false);
+                    serverStatus.setSelected(true);
+                    break;
+                case SarabandaController.SERVER_UNKNOWN: 
+                    serverStatus.setIndeterminate(true);
+                    break;
+                case SarabandaController.SERVER_STOPPED: 
+                    serverStatus.setIndeterminate(false);
+                    serverStatus.setSelected(false);
+                    break;
+                default:
+                    serverStatus.setIndeterminate(true);
+            }
+        };
+        status.addListener(serverStatusChangeListener);
         
-        log.log(Level.INFO, "initialize");
-    }    
+        SarabandaController.getInstance().startServer();
+    }
 
     @FXML
-    private void ButtonOneAction(ActionEvent event) {
-        if (switchOne) {
-            mainApp.startUDPServer();
-            ButtonOne.setText("Stop Server");
+    private void handleSendButtonStatus() {
+        System.out.println("handleSendButtonStatus");
+    }
+
+    @FXML
+    private void handleFullReset() {
+        SarabandaController.getInstance().sendSarabandaFullReset();
+    }
+
+    @FXML
+    private void handleReset() {
+        SarabandaController.getInstance().sendSarabandaReset();
+    }
+
+    @FXML
+    private void handleError() {
+        SarabandaController.getInstance().sendSarabandaError();
+    }
+
+    @FXML
+    private void handleServerStatus() {
+        SarabandaController sarabanda = SarabandaController.getInstance();
+        if (serverStatus.isSelected()) {
+            sarabanda.stopServer();
         } else {
-            mainApp.stopUDPServer();
-            ButtonOne.setText("Start Server");
-        } 
-        
-        switchOne = !switchOne;
+            sarabanda.startServer();
+        }
     }
 
     @FXML
-    private void ButtonTwoAction(ActionEvent event) {
-        Logger.getLogger(NetworkController.class.getName()).log(Level.INFO, "Stop the server");
-        ChangeMainLabel("UDP Server stop");
-        
-        mainApp.stopUDPServer();
+    private void handleMasterReset() {
+        SarabandaController.getInstance().sendSarabandaMasterPhysicalReset();
     }
 
-    @FXML
-    private void ButtonThreeAction(ActionEvent event) {
-        Logger.getLogger(NetworkController.class.getName()).log(Level.INFO, "exit");
-        ChangeMainLabel("Button Three, You clicked me!");
-    }
-
-    @FXML
-    private void ButtonFourAction(ActionEvent event) {
-        Logger.getLogger(NetworkController.class.getName()).log(Level.INFO, "exit");
-        Platform.exit();
-    }
-    
-    public void ChangeMainLabel(String labelText) {
-        System.out.println(labelText);
-        MainLabel.setText(labelText);
-    }
-
-    void setMainApp(SarabandaSaloon mainApplication) {
-        this.mainApp = mainApplication;
-    }
-    
-    StringProperty getServerLabelProperty() {
-        return MainLabel.textProperty();
-    }
-    
-    /**
-     * 
-     * @return 
-     */
-    public StringProperty statusProperty() {
-        return this.statusMessage;
-    }
 }

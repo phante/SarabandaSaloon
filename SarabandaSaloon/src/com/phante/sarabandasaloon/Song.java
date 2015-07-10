@@ -5,14 +5,12 @@
  */
 package com.phante.sarabandasaloon;
 
+
 import java.text.DecimalFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.MapChangeListener;
@@ -29,7 +27,6 @@ public class Song {
 
     private final MediaPlayer player;
 
-    private final IntegerProperty id = new SimpleIntegerProperty();
     private final StringProperty fileName = new SimpleStringProperty();
     private final StringProperty title = new SimpleStringProperty();
     private final StringProperty artist = new SimpleStringProperty();
@@ -37,12 +34,15 @@ public class Song {
     private final StringProperty totalDuration = new SimpleStringProperty();
     private Duration duration;
 
-    private final BooleanProperty isPlayed = new SimpleBooleanProperty();
+    private final BooleanProperty played = new SimpleBooleanProperty();
+    private final BooleanProperty ok = new SimpleBooleanProperty();
+    private final BooleanProperty ko = new SimpleBooleanProperty();
 
-    public Song(int songId, String source) {
-        id.set(songId);
+    public Song(String source) {
         fileName.setValue(source);
-        isPlayed.set(false);
+        played.setValue(false);
+        ok.setValue(false);
+        ko.setValue(false);
 
         player = new MediaPlayer(new Media(source));
 
@@ -77,16 +77,8 @@ public class Song {
 
     }
 
-    public IntegerProperty idProperty() {
-        return id;
-    }
-
     public StringProperty fileNameProperty() {
         return fileName;
-    }
-
-    public BooleanProperty playedProperty() {
-        return isPlayed;
     }
 
     public StringProperty titleProperty() {
@@ -103,10 +95,6 @@ public class Song {
 
     public StringProperty totalDurationProperty() {
         return totalDuration;
-    }
-
-    public void setPlayed(boolean b) {
-        isPlayed.set(b);
     }
 
     public MediaPlayer getPlayer() {
@@ -143,7 +131,7 @@ public class Song {
     
     public void play() {
         player.play();
-        isPlayed.set(true);
+        played.setValue(true);
     }
  
     public void pause() {
@@ -153,6 +141,17 @@ public class Song {
     public MediaPlayer.Status status() {
         return player.statusProperty().getValue();
     }
+    
+    public BooleanProperty playedProperty() {
+        return played;
+    }
+    
+    public BooleanProperty koProperty() {
+        return ko;
+    }
 
+    public BooleanProperty okProperty() {
+        return ok;
+    }
 
 }
