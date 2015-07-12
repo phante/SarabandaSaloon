@@ -10,11 +10,11 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="671.0" prefWidth="933.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.phante.sarabandasaloon.view.GameController">
+<StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="671.0" prefWidth="933.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.phante.sarabandasaloon.ui.GameController">
     <children>
         <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
             <left>
-                <VBox minWidth="-Infinity" prefWidth="300.0" spacing="10.0" BorderPane.alignment="CENTER">
+                <VBox minWidth="-Infinity" prefHeight="545.0" prefWidth="342.0" spacing="10.0" BorderPane.alignment="CENTER">
                     <children>
                         <Label fx:id="currentTitle" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Titolo">
                             <VBox.margin>
@@ -66,15 +66,19 @@
                             </rowConstraints>
                             <children>
                                 <ToggleButton fx:id="timerSwitch" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleTimer" selected="true" text="Attiva timer" VBox.vgrow="ALWAYS" />
-                                <TextField fx:id="timerValue" alignment="CENTER_RIGHT" disable="true" prefHeight="25.0" prefWidth="77.0" text="60" GridPane.columnIndex="1" />
+                                <TextField fx:id="timerValue" alignment="CENTER_RIGHT" disable="true" prefHeight="25.0" prefWidth="77.0" text="10" GridPane.columnIndex="1" />
                             </children>
                         </GridPane>
                         <ProgressBar fx:id="progressTimer" layoutX="15.0" layoutY="144.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" progress="0.0" />
-                        <Label fx:id="timer" text="00:00.00">
-                            <font>
-                                <Font size="64.0" />
-                            </font>
-                        </Label>
+                  <HBox>
+                     <children>
+                              <Label fx:id="timeKeeperLabel" prefHeight="77.0" prefWidth="362.0" text=" 00:00.000">
+                                  <font>
+                                      <Font size="64.0" />
+                                  </font>
+                              </Label>
+                     </children>
+                  </HBox>
                         <GridPane>
                             <columnConstraints>
                                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
@@ -84,8 +88,8 @@
                                 <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                             </rowConstraints>
                             <children>
-                                <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSarabandaError" text="Errore" textFill="RED" />
-                                <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSarabandaCorrect" text="Corretto" textFill="#1ca107" GridPane.columnIndex="1">
+                                <Button fx:id="errorButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#errorGame" text="Errore" textFill="RED" />
+                                <Button fx:id="correctButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#goodGame" text="Corretto" textFill="#1ca107" GridPane.columnIndex="1">
                                     <font>
                                         <Font name="System Bold" size="12.0" />
                                     </font>
@@ -154,6 +158,24 @@
             <top>
                 <HBox fx:id="buttonPane" alignment="CENTER" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="100.0" spacing="10.0" BorderPane.alignment="CENTER" />
             </top>
+         <bottom>
+            <GridPane alignment="CENTER" BorderPane.alignment="CENTER">
+               <BorderPane.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </BorderPane.margin>
+               <columnConstraints>
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="865.0" minWidth="10.0" prefWidth="462.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="461.0" minWidth="10.0" prefWidth="461.0" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+               </rowConstraints>
+               <children>
+                  <Label fx:id="listenerLabel" text="Label" />
+                  <Label fx:id="messageLabel" prefHeight="16.0" prefWidth="363.0" text="Messaggi Sarabanda" GridPane.columnIndex="1" />
+               </children>
+            </GridPane>
+         </bottom>
         </BorderPane>
     </children>
 </StackPane>

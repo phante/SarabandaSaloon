@@ -75,6 +75,7 @@ public class UDPServerService extends Service<Void> {
             @Override
             protected Void call() {
                 try {
+                    Logger.getLogger(UDPServerService.class.getName()).log(Level.INFO, "Avvio il server UDP");
                     // Apre il socket
                     DatagramSocket socket = new DatagramSocket(serverUdpPort);
                     socket.setBroadcast(true);
@@ -91,12 +92,18 @@ public class UDPServerService extends Service<Void> {
                             // Valuto se è un messaggio Sarabanda Valido
                             String message = new String(recvPacket.getData());
                             message = message.trim();
+                            
+                            Logger.getLogger(UDPServerService.class.getName()).log(Level.INFO, 
+                                    "Ricevuto il messaggio {0} che {1} un messaggio Sarabanda valido secondo {2}", 
+                                    new Object[]{message, (message.matches(messageRegex)? "è":"non è"), messageRegex} );
+                                                       
                             if (message.matches(messageRegex)) {
                                 sender.setValue(recvPacket.getAddress().getHostAddress());
                                 packet.setValue(message);
                             }
                         } else {
                             // Chiude il socket
+                            Logger.getLogger(UDPServerService.class.getName()).log(Level.ALL, "Spengo il server UDP");
                             socket.close();
                         }
                     }

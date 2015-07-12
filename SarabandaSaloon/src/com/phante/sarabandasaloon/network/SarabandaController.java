@@ -5,8 +5,8 @@
  */
 package com.phante.sarabandasaloon.network;
 
-import com.phante.sarabandasaloon.ButtonStatus;
-import com.phante.sarabandasaloon.SarabandaButton;
+import com.phante.sarabandasaloon.entity.PushButtonStatus;
+import com.phante.sarabandasaloon.entity.PushButton;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -18,6 +18,8 @@ import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Worker;
@@ -37,17 +39,17 @@ public class SarabandaController {
     public final static int SERVER_STOPPED = 2;
 
     // Header standard del pacchetto Sarabanda
-    public final static String MESSAGE_HEADER = "SRBND-";
+    final static String MESSAGE_HEADER = "SRBND-";
 
     // Comandi sarabanda validi
-    public final static String RESET_COMMAND = "RESET";
-    public final static String FULLRESET_COMMAND = "FULLRESET";
-    public final static String ERROR_COMMAND = "ERROR";
-    public final static String DEMO_COMMAND = "DEMO";
-    public final static String HWRESET_COMMAND = "X";
-    public final static String BUTTON_COMMAND = "B";
+    final static String RESET_COMMAND = "RESET";
+    final static String FULLRESET_COMMAND = "FULLRESET";
+    final static String ERROR_COMMAND = "ERROR";
+    final static String DEMO_COMMAND = "DEMO";
+    final static String HWRESET_COMMAND = "X";
+    final static String BUTTON_COMMAND = "B";
     
-    public final String buttonCommandRegex;
+    final String buttonCommandRegex;
 
     // Porta di ascolto
     private final static int UDPPORT = 8888;
@@ -59,9 +61,10 @@ public class SarabandaController {
     private UDPServerService udpservice;
     // Memorizza lo stato del server
     private final ReadOnlyIntegerWrapper serverStatus = new ReadOnlyIntegerWrapper();
-
+    // Memorizza l'ultimo messaggio arrivato
+    private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper();
     // Stato dei pulsanti
-    public final ObservableList<SarabandaButton> buttons = FXCollections.observableArrayList();
+    private final ObservableList<PushButton> buttons = FXCollections.observableArrayList();
 
     /**
      * Inizializza lo stato del controller andando a creare il servizio che si
@@ -73,7 +76,7 @@ public class SarabandaController {
 
         // Crea i pulsanti del sarabanda
         for (int i = 0; i < BUTTON_NUMBER; i++) {
-            buttons.add(new SarabandaButton());
+            buttons.add(new PushButton());
         }
         
         // Espressione regolare per identificare un pacchetto pulsanti valido
@@ -82,7 +85,7 @@ public class SarabandaController {
                 .append(MESSAGE_HEADER)
                 .append(BUTTON_COMMAND)
                 .append("[");
-        for (ButtonStatus status: ButtonStatus.values()) {
+        for (PushButtonStatus status: PushButtonStatus.values()) {
             regex.append(status);
         }
         regex.append("]{")
@@ -125,6 +128,7 @@ public class SarabandaController {
                     // per disaccoppiare i thread e consentire la modifica della UI
                     // dal thread principale
                     Platform.runLater(() -> {
+                        message.setValue(newValue);
                         parseMessage(newValue);
                     });
                 }
@@ -165,7 +169,7 @@ public class SarabandaController {
         if (message.matches(buttonCommandRegex)) {
             String button = message.substring(message.length() - 4);
             for (int i = 0; buttons.size() > i; i++) {
-                ButtonStatus status = ButtonStatus.parse(button.substring(i, i + 1));
+                PushButtonStatus status = PushButtonStatus.parse(button.substring(i, i + 1));
                 buttons.get(i).setStatus(status);
             }
         }
@@ -223,6 +227,51 @@ public class SarabandaController {
     }
 
     /**
+     * Invia un comando di disabilitazione dei pulsanti, utile per evitare pressioni fuori sequenza
+     * in una fase di gioco fermo
+     * 
+     */
+    public void enableAllPushButton() {
+        StringBuffer _message = new StringBuffer().append(SarabandaController.BUTTON_COMMAND);
+        
+        buttons.stream().forEach((_item) -> {
+            _message.append(_item.getStatus() == PushButtonStatus.DISABLED? PushButtonStatus.ENABLED: _item.getStatus());
+        });
+                
+        sendSarabandaMessage(_message.toString());
+    }
+    
+    /**
+     * Invia un comando di disabilitazione dei pulsanti, utile per evitare pressioni fuori sequenza
+     * in una fase di gioco fermo
+     * 
+     */
+    public void disableAllPushButton() {
+        StringBuffer _message = new StringBuffer().append(SarabandaController.BUTTON_COMMAND);
+        
+        buttons.stream().forEach((_item) -> {
+            _message.append(_item.getStatus() == PushButtonStatus.ENABLED ? PushButtonStatus.DISABLED : _item.getStatus());
+        });
+                
+        sendSarabandaMessage(_message.toString());
+    }
+    
+    /**
+     * Manda in errore tutti i pulsanti non premuti
+     * 
+     */
+    public void errorUnpressedPushButton() {
+        StringBuffer _message = new StringBuffer().append(SarabandaController.BUTTON_COMMAND);
+        
+        buttons.stream().forEach((_item) -> {
+            _message.append(_item.getStatus() == PushButtonStatus.PRESSED? _item.getStatus(): PushButtonStatus.ERROR);
+        });
+                
+        sendSarabandaMessage(_message.toString());
+    }
+
+
+    /**
      * Invia un messaggio Sarabanda
      *
      * @param message
@@ -268,6 +317,22 @@ public class SarabandaController {
      */
     public ReadOnlyIntegerProperty serverStatusProperty() {
         return serverStatus.getReadOnlyProperty();
+    }
+    
+    /**
+     * 
+     * @return 
+     */
+    public ReadOnlyStringProperty messageProperty() {
+        return message.getReadOnlyProperty();
+    }
+    
+    /**
+     * 
+     * @return 
+     */
+    public ObservableList<PushButton> getPushButton() {
+        return buttons;
     }
 
 }

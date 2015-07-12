@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.phante.sarabandasaloon;
+package com.phante.sarabandasaloon.entity;
 
 
 import java.text.DecimalFormat;
@@ -131,7 +131,7 @@ public class Song {
     
     public void play() {
         player.play();
-        played.setValue(true);
+        //played.setValue(true);
     }
  
     public void pause() {

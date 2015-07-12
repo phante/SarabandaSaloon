@@ -6,9 +6,7 @@
 package com.phante.sarabandasaloon;
 
 import com.phante.sarabandasaloon.network.SarabandaController;
-import com.phante.sarabandasaloon.view.RootController;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.phante.sarabandasaloon.ui.RootController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 
@@ -26,7 +24,7 @@ public class SarabandaSaloon extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         // Inizializza la finestra principale
-        FXMLLoader rootloader = new FXMLLoader(getClass().getResource("view/Root.fxml"));
+        FXMLLoader rootloader = new FXMLLoader(getClass().getResource("ui/Root.fxml"));
         Pane rootLayout = rootloader.load();
         ((RootController)rootloader.getController()).setStage(primaryStage);
         

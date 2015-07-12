@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.phante.sarabandasaloon;
+package com.phante.sarabandasaloon.entity;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -13,6 +13,9 @@ import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -27,10 +30,13 @@ public class Game {
     private static final int BUTTON_NUMBER = 4;
     
     private final StringProperty name = new SimpleStringProperty();
+    // Indica se la manche è in corso
+    private final ReadOnlyBooleanWrapper running = new ReadOnlyBooleanWrapper();
     // Lista delle canzoni
     private final ObservableList<Song> songs = FXCollections.observableArrayList();
     // Lista della canzoni per la manche finale
     private final ObservableList<Song> finalSongs = FXCollections.observableArrayList();
+
        
     /**
      * La lista delle canzoni
@@ -47,6 +53,19 @@ public class Game {
      */
     public ObservableList<Song> getFinalSongs() {
         return finalSongs;
+    }
+    
+    
+    public ReadOnlyBooleanProperty runningProperty() {
+        return running.getReadOnlyProperty();
+    }
+    
+    public void start() {
+        running.setValue(true);
+    }
+    
+    public void stop() {
+        running.setValue(false);
     }
     
     /**

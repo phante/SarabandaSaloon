@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.phante.sarabandasaloon.view;
+package com.phante.sarabandasaloon.ui;
 
 import com.phante.sarabandasaloon.network.SarabandaController;
 import java.net.URL;

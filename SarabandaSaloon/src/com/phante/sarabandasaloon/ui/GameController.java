@@ -3,21 +3,26 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.phante.sarabandasaloon.view;
+package com.phante.sarabandasaloon.ui;
 
-import com.phante.sarabandasaloon.ButtonStatus;
-import com.phante.sarabandasaloon.Game;
-import com.phante.sarabandasaloon.Song;
+import com.phante.sarabandasaloon.entity.PushButtonStatus;
+import com.phante.sarabandasaloon.entity.Game;
+import com.phante.sarabandasaloon.entity.PushButton;
+import com.phante.sarabandasaloon.entity.Song;
 import com.phante.sarabandasaloon.network.SarabandaController;
-import com.phante.sarabandasaloon.view.simbols.ButtonSimbol;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableMap;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.concurrent.Task;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -37,7 +42,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.media.MediaMarkerEvent;
-import javafx.scene.media.MediaPlayer.Status;
+import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
 /**
@@ -47,6 +52,9 @@ import javafx.util.Duration;
  */
 public class GameController implements Initializable {
 
+    // Gestisce l'interfaccia in modo forzato costringendo l'utilizzatore a seguire un percorso obbligato
+    private static final boolean forceGamePlay = true;
+
     @FXML
     private Label currentTitle = new Label();
     @FXML
@@ -55,9 +63,15 @@ public class GameController implements Initializable {
     private Label currentArtist = new Label();
     @FXML
     private Label currentTotalDuration = new Label();
-
     @FXML
-    private Label timer = new Label();
+    private Label messageLabel = new Label();
+    @FXML
+    private Label listenerLabel = new Label();
+
+    // Etichette per il contatempo
+    @FXML
+    private Label timeKeeperLabel = new Label();
+
     @FXML
     private TextField timerValue = new TextField();
     @FXML
@@ -109,6 +123,10 @@ public class GameController implements Initializable {
     private Button playButton = new Button();
     @FXML
     private Button rewindButton = new Button();
+    @FXML
+    private Button errorButton = new Button();
+    @FXML
+    private Button correctButton = new Button();
 
     private Song currentSong = null;
     private Game currentGame = null;
@@ -127,13 +145,18 @@ public class GameController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Forza la disabilitazione dei pulsanti di play/rewind che vengono abilitati al caricamento della traccia
-        playButton.setDisable(true);
-        rewindButton.setDisable(true);
-
         // Inizializza il controlled con un Game di default
         currentGame = new Game();
-
+        
+        // Imposta lo stato iniziale dell'interfaccia
+        resetGameInterface();
+        // Imposta lo stato iniziale dei pulsanti del player, non gestiti dalla resetGameInterface()
+        enablePlayerInterface(false);
+        
+        // Disabilita le tabelle di scelta della canzone
+        //songTable.setDisable(false);
+        //finalSongTable.setDisable(false);
+ 
         // Imposta la tabella delle canzioni delle manche
         FilteredList<Song> filteredData = new FilteredList<>(currentGame.getSongs(), p -> true);
         SortedList<Song> sortedData = new SortedList<>(filteredData);
@@ -265,30 +288,55 @@ public class GameController implements Initializable {
         // Inizializza l'indicatore dello stato dei pulsanti
         buttonStatusPaneInit();
 
+        // Inizializza gli elementi della status bar
+        messageLabel.textProperty().bind(SarabandaController.getInstance().messageProperty());
+        SarabandaController.getInstance().serverStatusProperty().addListener((observable, oldValue, newValue) -> {
+            switch (newValue.intValue()) {
+                case SarabandaController.SERVER_STARTED:
+                    listenerLabel.setText("Listener acceso");
+                    break;
+                case SarabandaController.SERVER_STOPPED:
+                    listenerLabel.setText("Listener spento");
+                    break;
+                default:
+                    listenerLabel.setText("");
+            }
+        });
+
     }
 
     /**
      * Inizializza l'aspetto grafico per lo stato dei pulsanti
      */
-    private void buttonStatusPaneInit() {     
+    private void buttonStatusPaneInit() {
+        // TODO Scollgerae la dimensione statica e collegare il ridimensionamneto dei singoli pushbuttun al parent
         double maxSize = 100;
+
         // Inizializza i pulsanti
-        SarabandaController.getInstance().buttons.stream().forEach((button) -> {
+        SarabandaController.getInstance().getPushButton().stream().forEach((button) -> {
             // Crea il simbolo
-            ButtonSimbol simbol = new ButtonSimbol();
+            PushButtonSimbol simbol = new PushButtonSimbol();
 
             // Aggiunge il simbolo al pannello
             buttonPane.getChildren().add(simbol);
-            //buttonSimbols.add(simbol);
 
             // Imposta le dimensioni
             simbol.setMaxSize(maxSize, maxSize);
             simbol.setMinSize(maxSize, maxSize);
             simbol.setPrefSize(maxSize, maxSize);
-            
+
             // Aggiunge il listener sullo stato dei pulsanti
             button.valueProperty().addListener((ObservableValue<? extends String> observable, String oldValue, String newValue) -> {
-                simbol.setValue(ButtonStatus.parse(newValue));
+                // Verifico se il gioco è in corso per capise se gestire lo stato del gioco
+                // TODO fare una inizializzazione separata con un listener dedicato
+                /*
+                if (currentGame.runningProperty().getValue() && ) {
+                    pushButtonPressed();
+                }
+                */
+                
+                // Al cambio dello stato del pulsante cambio il simbolo come feedback visivo di cosa succede sul palco
+                simbol.setValue(PushButtonStatus.parse(newValue));
             });
         });
     }
@@ -300,24 +348,21 @@ public class GameController implements Initializable {
      */
     private void songSelection(Song song) {
         if (currentSong != null) {
-            // Ferma la riproduzione della traccia
-            if (currentSong.status() == Status.PLAYING) {
-                currentSong.stop();
-                playButton.setText("Play");
-            }
             // Elimina il listener sui progressi
             currentSong.getPlayer().currentTimeProperty().removeListener(progressChangeListener);
         }
 
-        // 
+        // Controllo formale di sicurezza
         if (song == null) {
-            // Disabilita i pulsanti
-            playButton.setDisable(true);
-            rewindButton.setDisable(true);
+            resetGameInterface();
+            enablePlayerInterface(false);
         } else {
-            // Abilita i pulsanti e imposta i dati
-            playButton.setDisable(false);
-            rewindButton.setDisable(false);
+            resetGameInterface();
+            enablePlayerInterface(true);
+            
+            // Blocca i pulsanti del sarabanda per eliminare noiose pressioni inutili
+            SarabandaController.getInstance().sendSarabandaFullReset();
+            SarabandaController.getInstance().disableAllPushButton();
 
             // Assegna la canzone corrente
             currentSong = song;
@@ -326,7 +371,9 @@ public class GameController implements Initializable {
             currentSong.rewind();
 
             // Imposta l'interfaccia
-            timer.setText("00:00.00"); // resetta l'etichetta del timer
+            // Imposto il contatempo a 0
+            updateTimeKeeper(Duration.ZERO);
+
             progress.setProgress(0); // resetta la progressbar complessiva
             progressTimer.setProgress(0); // resetta la progressbar del timer
 
@@ -341,41 +388,168 @@ public class GameController implements Initializable {
 
             // Imposta il listener per le progressbar e il segnatempo
             progressChangeListener = (observableValue, oldValue, newValue) -> {
-                        Duration currentTime = currentSong.getPlayer().getCurrentTime();
+                Duration currentTime = currentSong.getPlayer().getCurrentTime();
 
-                        // Abilita o disabilita le gestione della progress bar del timer
-                        if (timerSwitch.selectedProperty().getValue()) {
-                            progressTimer.setDisable(false);
-                            Double maxTime = getTimerValue().toMillis() < currentSong.getDuration().toMillis() ? getTimerValue().toMillis() : currentSong.getDuration().toMillis();
-                            progressTimer.setProgress(1.0 * currentTime.toMillis() / maxTime);
-                        }
+                // Abilita o disabilita le gestione della progress bar del timer
+                if (timerSwitch.selectedProperty().getValue()) {
+                    progressTimer.setDisable(false);
+                    Double maxTime = getTimerValue().toMillis() < currentSong.getDuration().toMillis() ? getTimerValue().toMillis() : currentSong.getDuration().toMillis();
+                    progressTimer.setProgress(1.0 * currentTime.toMillis() / maxTime);
+                }
 
-                        progress.setProgress(1.0 * currentTime.toMillis() / currentSong.getDuration().toMillis());
+                progress.setProgress(1.0 * currentTime.toMillis() / currentSong.getDuration().toMillis());
 
-                        timerTextUpdate(currentTime);
-                    };
+                updateTimeKeeper(currentTime);
+            };
             currentSong.getPlayer().currentTimeProperty().addListener(progressChangeListener);
 
             // Cambia lo stato del pulsante per consentire la pausa della canzone
             currentSong.getPlayer().setOnPlaying(() -> {
                 playButton.setText("Pause");
-                songTable.setDisable(true);
-                finalSongTable.setDisable(true);
             });
 
             // Cambia lo stato del pulsante e allinea il contatempo al tempo reale
             currentSong.getPlayer().setOnPaused(() -> {
+                updateTimeKeeper(currentSong.getPlayer().getCurrentTime());
                 playButton.setText("Play");
-                songTable.setDisable(false);
-                finalSongTable.setDisable(false);
-                timerTextUpdate(currentSong.getPlayer().getCurrentTime());
             });
 
-            // Mette in pausa
+            // Gestione del marker del timeoput
             currentSong.getPlayer().setOnMarker((final MediaMarkerEvent event) -> {
-                currentSong.pause();
+                timeoutGame();
             });
         }
+    }
+
+    /**
+     * Resetta lo stato dell'interfaccia in modo che sia pronta per l'esecuzione
+     * di un nuovo gioco
+     */
+    public void resetGameInterface() {
+        /*
+         Riabilita l'interfaccia per far partire il brano. Se il gameplay è forzato l'interfaccia rimane disabilitata
+         fino alla scelta del prossimo brano
+         */
+        if (!forceGamePlay) {
+            enablePlayerInterface(true);
+        }
+
+        // Disabilita i pulsanti per la gestione delle risposte
+        correctButton.setDisable(true);
+        errorButton.setDisable(true);
+
+        // Abilita le tabelle di scelta della canzone
+        songTable.setDisable(false);
+        finalSongTable.setDisable(false);
+    }
+
+    /**
+     * Gestisce l'inizio del gioco
+     */
+    public void startGame() {
+        currentGame.start();
+        
+        // Disabilita la scelta della canzone
+        songTable.setDisable(true);
+        finalSongTable.setDisable(true);
+
+        // Disabilita i pulsanti per la gestione delle risposte
+        correctButton.setDisable(true);
+        errorButton.setDisable(true);
+
+        // Abilita i push button
+        SarabandaController.getInstance().enableAllPushButton();
+
+        // Avvia la canzone
+        currentSong.play();
+    }
+
+    /**
+     * Gestisce la pressione di un pushButton
+     *
+     */
+    public void pushButtonPressed() {
+        // Ferma la canzone
+        currentSong.pause();
+
+        // Disabilita i pulsanti per il play o la pausa
+        if (forceGamePlay) enablePlayerInterface(false);
+
+        // Abilita i pulsanti per la gestione delle risposte
+        correctButton.setDisable(true);
+        correctButton.setDisable(true);
+    }
+
+    /**
+     * Un giocatore ha indovinato la canzone
+     */
+    @FXML
+    public void goodGame() {
+        // Imposta i push button non premuti con in errore
+        SarabandaController.getInstance().errorUnpressedPushButton();
+
+        // TODO Esegue suono di vittoria
+        
+        currentGame.stop();
+        resetGameInterface();
+    }
+
+    /**
+     * Gestisce lo stato del gioco con l'errore dei giocatori
+     */
+    @FXML
+    public void errorGame() {
+        // Invia un comando di errore al master del sarabanda
+        SarabandaController.getInstance().sendSarabandaError();
+        // Disabilita tutti i pulsanti non premuti per evitare pressioni spurie
+        SarabandaController.getInstance().disableAllPushButton();
+
+        // TODO Esegue suono di errore
+        // Riabilita l'interfaccia per eseguire il brano, in questo caso è necessario dare la possibile di continuare
+        enablePlayerInterface(true);
+
+        // TODO C'è il rischio che il giro SLAVE->MASTER->SLAVE sia troppo lento, valutare di rallentare
+        // Verifica se tutti i pulsanti sono in errore
+        boolean allInError = true;
+        for (PushButton button : SarabandaController.getInstance().getPushButton()) {
+            allInError = allInError && (button.getStatus() == PushButtonStatus.ERROR);
+        }
+
+        // Gioco concluso in errore, si comporta come il timeout
+        if (allInError) {
+            // Forsa lo stato dei pulsanti in errore con il doppio scopo di dare un segno visuale e bloccare i pulsanti
+            SarabandaController.getInstance().errorUnpressedPushButton();
+            
+            resetGameInterface();
+
+        }
+    }
+
+    /**
+     * Gestisce il comportamento del gioco in caso di timeout
+     */
+    public void timeoutGame() {
+        // Mette in pausa la traccia audio
+        currentSong.pause();
+
+        // Forsa lo stato dei pulsanti in errore con il doppio scopo di dare un segno visuale e bloccare i pulsanti
+        SarabandaController.getInstance().errorUnpressedPushButton();
+
+        // TODO Esegue il suono dell'errore finale
+        
+        currentGame.stop();
+        resetGameInterface();
+    }
+
+    /**
+     * Si occupa di disabilitare gli elementi grafici che permettono
+     * l'esecuzione della canzion
+     *
+     * @param status
+     */
+    public void enablePlayerInterface(boolean status) {
+        playButton.setDisable(!status);
+        rewindButton.setDisable(!status);
     }
 
     /**
@@ -383,20 +557,36 @@ public class GameController implements Initializable {
      *
      * @param currentTime
      */
-    public void timerTextUpdate(Duration currentTime) {
+    public void updateTimeKeeper(Duration currentTime) {
         DecimalFormat format = new DecimalFormat("00");
-        String minute = format.format((int) Math.floor((currentTime.toMillis() / 1000) / 60));
-        String second = format.format((int) Math.floor((currentTime.toMillis() / 1000) % 60));
-        String millis = format.format((int) Math.floor((currentTime.toMillis() % 1000) / 10));
+
+        String sign = "";
+
+        // Imposta il colore rosso per i valori negativi
+        if (currentTime.lessThan(Duration.ZERO)) {
+            sign = "-";
+            timeKeeperLabel.setTextFill(Color.RED);
+        } else {
+            timeKeeperLabel.setTextFill(Color.BLACK);
+        }
+
+        Double absoluteTime = Math.abs(currentTime.toMillis());
+
+        String minute = format.format((int) Math.floor(absoluteTime / 1000) / 60);
+        String second = format.format((int) Math.floor(absoluteTime / 1000) % 60);
+        String millis = format.format((int) Math.floor(absoluteTime % 1000) / 10);
+
+        Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Aggiorno il contatempo con i valori {0}{1}:{2}.{3}", new Object[]{sign, minute, second, millis});
 
         String timeStr = new StringBuilder()
+                .append(sign)
                 .append(minute)
                 .append(":")
                 .append(second)
                 .append(".")
                 .append(millis)
                 .toString();
-        timer.setText(timeStr);
+        timeKeeperLabel.setText(timeStr);
     }
 
     /**
@@ -410,6 +600,7 @@ public class GameController implements Initializable {
 
     /**
      * Ricarica le canzoni
+     *
      * @param path
      */
     public void loadGameSong(String path) {
@@ -425,6 +616,7 @@ public class GameController implements Initializable {
             if ("Pause".equals(playButton.getText())) {
                 currentSong.pause();
             } else {
+                SarabandaController.getInstance().enableAllPushButton();
                 currentSong.play();
             }
         }
@@ -478,19 +670,6 @@ public class GameController implements Initializable {
     @FXML
     public void handleSarabandaFullReset() {
         SarabandaController.getInstance().sendSarabandaFullReset();
-    }
-
-    @FXML
-    public void handleSarabandaError() {
-        SarabandaController.getInstance().sendSarabandaError();
-        currentSong.koProperty().setValue(true);
-        currentSong.okProperty().setValue(false);
-    }
-
-    @FXML
-    public void handleSarabandaCorrect() {
-        currentSong.koProperty().setValue(false);
-        currentSong.okProperty().setValue(true);
     }
 
     @FXML

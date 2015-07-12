@@ -3,13 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.phante.sarabandasaloon;
+package com.phante.sarabandasaloon.entity;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author deltedes
  */
-public enum ButtonStatus {
+public enum PushButtonStatus {
     ENABLED("-"),
     PRESSED("O"),
     ERROR("X"),
@@ -17,7 +20,7 @@ public enum ButtonStatus {
     
     private final String name;       
 
-    private ButtonStatus(String s) {
+    private PushButtonStatus(String s) {
         name = s;
     }
     
@@ -26,8 +29,9 @@ public enum ButtonStatus {
        return name;
     }
     
-    public static ButtonStatus parse(String value) {
-        for (ButtonStatus status: ButtonStatus.values()) {
+    public static PushButtonStatus parse(String value) {
+        for (PushButtonStatus status: PushButtonStatus.values()) {
+            //Logger.getLogger(PushButtonStatus.class.getName()).log(Level.INFO, "Confronto {0} con {1}", new Object[]{value, status.toString()});
             if (value.equals(status.toString())) return status;
         }
         return ENABLED;

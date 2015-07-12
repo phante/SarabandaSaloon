@@ -1,11 +1,12 @@
-/*
+    /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.phante.sarabandasaloon.view;
+package com.phante.sarabandasaloon.ui;
 
 
+import com.phante.sarabandasaloon.network.SarabandaController;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -53,6 +54,7 @@ public class RootController implements Initializable {
             gameTab.setContent(gamePage);
             gameTab.setText("Game");
 
+            /*
             FXMLLoader contentLoader = new FXMLLoader(getClass().getResource("Network.fxml"));
             Pane documentPage = contentLoader.load();
             networkController = (NetworkController) contentLoader.getController();
@@ -60,10 +62,14 @@ public class RootController implements Initializable {
             Tab documentTab = new Tab();
             documentTab.setContent(documentPage);
             documentTab.setText("Document");
-
-            tabPane.getTabs().setAll(gameTab, documentTab);
+            */
+            tabPane.getTabs().setAll(gameTab);
             
-            gameController.loadGameSong("D:\\mp3");
+            // Avvia il server
+            SarabandaController.getInstance().startServer();
+            
+            //gameController.loadGameSong("D:\\mp3");
+            gameController.loadGameSong("/Users/elvisdeltedesco/Music/iTunes/iTunes Music/Music/AC_DC/Black Ice");
 
         } catch (IOException ex) {
             Logger.getLogger(RootController.class.getName()).log(Level.SEVERE, null, ex);
@@ -82,12 +88,12 @@ public class RootController implements Initializable {
     
     @FXML
     public void handleErrorMenu() {
-        gameController.handleSarabandaError();
+        gameController.errorGame();
     }
     
     @FXML
     public void handleCorrectMenu() {
-        gameController.handleSarabandaCorrect();
+        gameController.goodGame();
     }
     
     /**
