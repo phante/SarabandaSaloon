@@ -1,7 +1,17 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright 2015 deltedes.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.phante.sarabandasaloon.entity;
 
@@ -13,7 +23,6 @@ import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.SimpleStringProperty;
@@ -26,9 +35,7 @@ import javafx.collections.ObservableList;
  * @author deltedes
  */
 public class Game {
-
-    private static final int BUTTON_NUMBER = 4;
-    
+   
     private final StringProperty name = new SimpleStringProperty();
     // Indica se la manche è in corso
     private final ReadOnlyBooleanWrapper running = new ReadOnlyBooleanWrapper();
@@ -55,9 +62,12 @@ public class Game {
         return finalSongs;
     }
     
-    
     public ReadOnlyBooleanProperty runningProperty() {
         return running.getReadOnlyProperty();
+    }
+    
+    public boolean isRunning () {
+        return running.getValue();
     }
     
     public void start() {
@@ -129,6 +139,7 @@ public class Game {
      * @param currentSong 
      */
     public void moveSongToFinal(Song currentSong) {
+        Logger.getLogger(Game.class.getName()).log(Level.INFO, "Sposto {0} sulla finale.", currentSong.getFileName());
         songs.remove(currentSong);
         finalSongs.add(currentSong);
     }
@@ -138,6 +149,7 @@ public class Game {
      * @param currentSong 
      */
     public void moveSongToGame(Song currentSong) {
+        Logger.getLogger(Game.class.getName()).log(Level.INFO, "Sposto {0} sulla manche.", currentSong.getFileName());
         finalSongs.remove(currentSong);
         songs.add(currentSong);
     }

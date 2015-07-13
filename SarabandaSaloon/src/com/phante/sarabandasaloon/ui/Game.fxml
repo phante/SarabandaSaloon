@@ -10,7 +10,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="671.0" prefWidth="933.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.phante.sarabandasaloon.ui.GameController">
+<StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="671.0" prefWidth="933.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.phante.sarabandasaloon.ui.GameController">
     <children>
         <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
             <left>
@@ -66,7 +66,7 @@
                             </rowConstraints>
                             <children>
                                 <ToggleButton fx:id="timerSwitch" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleTimer" selected="true" text="Attiva timer" VBox.vgrow="ALWAYS" />
-                                <TextField fx:id="timerValue" alignment="CENTER_RIGHT" disable="true" prefHeight="25.0" prefWidth="77.0" text="10" GridPane.columnIndex="1" />
+                                <TextField fx:id="timerValue" alignment="CENTER_RIGHT" disable="true" prefHeight="25.0" prefWidth="15.0" text="10" GridPane.columnIndex="1" />
                             </children>
                         </GridPane>
                         <ProgressBar fx:id="progressTimer" layoutX="15.0" layoutY="144.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" progress="0.0" />
@@ -156,7 +156,10 @@
             </VBox>
             </center>
             <top>
-                <HBox fx:id="buttonPane" alignment="CENTER" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="100.0" spacing="10.0" BorderPane.alignment="CENTER" />
+                <HBox fx:id="buttonPane" alignment="CENTER" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="100.0" spacing="10.0" BorderPane.alignment="CENTER">
+               <BorderPane.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </BorderPane.margin></HBox>
             </top>
          <bottom>
             <GridPane alignment="CENTER" BorderPane.alignment="CENTER">

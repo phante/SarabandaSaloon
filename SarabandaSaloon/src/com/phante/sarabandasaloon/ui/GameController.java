@@ -1,7 +1,17 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright 2015 deltedes.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.phante.sarabandasaloon.ui;
 
@@ -15,14 +25,12 @@ import java.text.DecimalFormat;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.animation.Timeline;
-import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
-import javafx.concurrent.Task;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -35,11 +43,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.cell.CheckBoxTableCell;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.media.MediaMarkerEvent;
 import javafx.scene.paint.Color;
@@ -55,6 +58,7 @@ public class GameController implements Initializable {
     // Gestisce l'interfaccia in modo forzato costringendo l'utilizzatore a seguire un percorso obbligato
     private static final boolean forceGamePlay = true;
 
+    // Etichette con le informazioni sul brano
     @FXML
     private Label currentTitle = new Label();
     @FXML
@@ -63,28 +67,36 @@ public class GameController implements Initializable {
     private Label currentArtist = new Label();
     @FXML
     private Label currentTotalDuration = new Label();
-    @FXML
-    private Label messageLabel = new Label();
-    @FXML
-    private Label listenerLabel = new Label();
 
     // Etichette per il contatempo
     @FXML
     private Label timeKeeperLabel = new Label();
 
+    // Etichetta per lo status bar che mostra i messaggi in entrata
+    @FXML
+    private Label messageLabel = new Label();
+    // Etichetta per lo status bar che mostra lo stato del listener
+    @FXML
+    private Label listenerLabel = new Label();
+
+    // Campo di test per la durata del timer
     @FXML
     private TextField timerValue = new TextField();
+    // Campo di ricerca della canzone
     @FXML
     private TextField songFilter = new TextField();
-
-    @FXML
-    private ProgressBar progress = new ProgressBar();
-    @FXML
-    private ProgressBar progressTimer = new ProgressBar();
-
+    // Impostazioni di attivazione e disattivazione del timer
     @FXML
     private ToggleButton timerSwitch = new ToggleButton();
 
+    // ProgressBar per il tempom totale di esecuzione
+    @FXML
+    private ProgressBar progress = new ProgressBar();
+    // ProgressBar per il tempo del timer
+    @FXML
+    private ProgressBar progressTimer = new ProgressBar();
+
+    // Tabella con la lista delle canzoni della manche normale
     @FXML
     private TableView<Song> songTable = new TableView<>();
     @FXML
@@ -102,6 +114,7 @@ public class GameController implements Initializable {
     @FXML
     private TableColumn<Song, Boolean> songKOColumn = new TableColumn<>();
 
+    // Tabella con la lista delle canzoni della manche finale
     @FXML
     private TableView<Song> finalSongTable = new TableView<>();
     @FXML
@@ -119,93 +132,49 @@ public class GameController implements Initializable {
     @FXML
     private TableColumn<Song, Boolean> finalSongKOColumn = new TableColumn<>();
 
+    // Pulsanti per la gestione del file audio
     @FXML
     private Button playButton = new Button();
     @FXML
     private Button rewindButton = new Button();
+
+    // Pulsanti per la gestione del sarabanda
     @FXML
     private Button errorButton = new Button();
     @FXML
     private Button correctButton = new Button();
 
-    private Song currentSong = null;
-    private Game currentGame = null;
-
-    private ChangeListener<Duration> progressChangeListener;
-
+    // Contenitore per lo stato dei pulsanti
     @FXML
     private HBox buttonPane = new HBox();
     //private List<ButtonSimbol> buttonSimbols = new ArrayList();
 
+    // Gioco corrente
+    private Game currentGame = new Game();
+
+    // Canzone corrente
+    private Song currentSong = null;
+    // Listener per l'indicazione del progresso sulla canzone
+    private ChangeListener<Duration> progressChangeListener;
+
     /**
-     * Initializes the controller class.
+     * Inizializza il controller.
      *
      * @param url
      * @param rb
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Inizializza il controlled con un Game di default
-        currentGame = new Game();
-        
-        // Imposta lo stato iniziale dell'interfaccia
+        // Imposta lo stato iniziale dell'interfaccia per il gioco
         resetGameInterface();
-        // Imposta lo stato iniziale dei pulsanti del player, non gestiti dalla resetGameInterface()
+
+        // Imposta lo stato iniziale dei pulsanti del player disabilitata
         enablePlayerInterface(false);
-        
-        // Disabilita le tabelle di scelta della canzone
-        //songTable.setDisable(false);
-        //finalSongTable.setDisable(false);
- 
-        // Imposta la tabella delle canzioni delle manche
-        FilteredList<Song> filteredData = new FilteredList<>(currentGame.getSongs(), p -> true);
-        SortedList<Song> sortedData = new SortedList<>(filteredData);
-        sortedData.comparatorProperty().bind(songTable.comparatorProperty());
-        songTable.setItems(sortedData);
 
-        // Imposta le tabella delle canzoni a selezione singola
-        songTable.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        // Imposta la gestione delle tabella delle canzoni della manche normale
+        songTableInit(currentGame.getSongs(), songTable);
 
-        // Imposta il listener per identificare il click sulla tabella
-        songTable.getSelectionModel().selectedItemProperty().addListener(
-                (observedValue, oldSong, newSong) -> {
-                    songSelection(newSong);
-                }
-        );
-
-        // Inizio del drag and drop
-        songTable.setOnDragDetected((MouseEvent event) -> {
-            Dragboard db = songTable.startDragAndDrop(TransferMode.MOVE);
-
-            ClipboardContent content = new ClipboardContent();
-            content.putString(currentGame.getSongID(currentSong));
-            db.setContent(content);
-
-            event.consume();
-        });
-
-        // Controlla le gestione del d&d dalla listra normale alla finale
-        songTable.setOnDragOver((DragEvent event) -> {
-            if (event.getGestureSource() != songTable
-                    && event.getDragboard().hasString()) {
-                event.acceptTransferModes(TransferMode.MOVE);
-            }
-            event.consume();
-        });
-
-        // Fine del drag and drop
-        songTable.setOnDragDropped((DragEvent event) -> {
-            Dragboard db = event.getDragboard();
-            boolean success = false;
-            if (db.hasString() && (db.getString().equals(currentGame.getSongID(currentSong)))) {
-                currentGame.moveSongToGame(currentSong);
-                success = true;
-            }
-            event.setDropCompleted(success);
-
-            event.consume();
-        });
-
+        // Imposta le singole colonne
         songIDColumn.setCellValueFactory(cellData -> currentGame.getSongIDProperty(cellData.getValue()));
         songTitleColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
         songAlbumColumn.setCellValueFactory(cellData -> cellData.getValue().albumProperty());
@@ -218,49 +187,9 @@ public class GameController implements Initializable {
         songKOColumn.setCellFactory((TableColumn<Song, Boolean> p) -> new CheckBoxTableCell<>());
 
         // Imposta la tabella delle canzioni per la finale
-        finalSongTable.setItems(currentGame.getFinalSongs());
-        finalSongTable.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        songTableInit(currentGame.getFinalSongs(), finalSongTable);
 
-        // Imposta il listener per identificare il click sulla tabella
-        finalSongTable.getSelectionModel().selectedItemProperty().addListener(
-                (observedValue, oldSong, newSong) -> {
-                    songSelection(newSong);
-                }
-        );
-
-        // Inizio del drag and drop
-        finalSongTable.setOnDragDetected((MouseEvent event) -> {
-            Dragboard db = finalSongTable.startDragAndDrop(TransferMode.MOVE);
-
-            ClipboardContent content = new ClipboardContent();
-            content.putString(currentGame.getSongID(currentSong));
-            db.setContent(content);
-
-            event.consume();
-        });
-
-        // Controlla le gestione del d&d dalla listra normale alla finale
-        finalSongTable.setOnDragOver((DragEvent event) -> {
-            if (event.getGestureSource() != finalSongTable
-                    && event.getDragboard().hasString()) {
-                event.acceptTransferModes(TransferMode.MOVE);
-            }
-            event.consume();
-        });
-
-        // Fine del drag and drop
-        finalSongTable.setOnDragDropped((DragEvent event) -> {
-            Dragboard db = event.getDragboard();
-            boolean success = false;
-            if (db.hasString() && (db.getString().equals(currentGame.getSongID(currentSong)))) {
-                currentGame.moveSongToFinal(currentSong);
-                success = true;
-            }
-            event.setDropCompleted(success);
-
-            event.consume();
-        });
-
+        // Imposta le singole colonne
         finalSongIDColumn.setCellValueFactory(cellData -> currentGame.getSongIDProperty(cellData.getValue()));
         finalSongTitleColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
         finalSongAlbumColumn.setCellValueFactory(cellData -> cellData.getValue().albumProperty());
@@ -272,21 +201,8 @@ public class GameController implements Initializable {
         finalSongKOColumn.setCellValueFactory(cellData -> cellData.getValue().koProperty());
         finalSongKOColumn.setCellFactory((TableColumn<Song, Boolean> p) -> new CheckBoxTableCell<>());
 
-        songFilter.textProperty().addListener((observable, oldValue, newValue) -> {
-            filteredData.setPredicate(song -> {
-                // If filter text is empty, display all persons.
-                if (newValue == null || newValue.isEmpty()) {
-                    return true;
-                }
-
-                // Compare first name and last name of every person with filter text.
-                String lowerCaseFilter = newValue.toLowerCase();
-                return currentGame.getSongID(song).toLowerCase().contains(lowerCaseFilter);
-            });
-        });
-
-        // Inizializza l'indicatore dello stato dei pulsanti
-        buttonStatusPaneInit();
+        // Inizializza il pannello con lo sttao dei pushButton
+        pushButtonStatusPaneInit();
 
         // Inizializza gli elementi della status bar
         messageLabel.textProperty().bind(SarabandaController.getInstance().messageProperty());
@@ -308,11 +224,11 @@ public class GameController implements Initializable {
     /**
      * Inizializza l'aspetto grafico per lo stato dei pulsanti
      */
-    private void buttonStatusPaneInit() {
-        // TODO Scollgerae la dimensione statica e collegare il ridimensionamneto dei singoli pushbuttun al parent
+    private void pushButtonStatusPaneInit() {
+        // TODO Scollegare la dimensione statica e collegare il ridimensionamneto dei singoli pushbutton al parent
         double maxSize = 100;
 
-        // Inizializza i pulsanti
+        // Inizializza i simboli per i singoli pulsanti
         SarabandaController.getInstance().getPushButton().stream().forEach((button) -> {
             // Crea il simbolo
             PushButtonSimbol simbol = new PushButtonSimbol();
@@ -327,18 +243,97 @@ public class GameController implements Initializable {
 
             // Aggiunge il listener sullo stato dei pulsanti
             button.valueProperty().addListener((ObservableValue<? extends String> observable, String oldValue, String newValue) -> {
-                // Verifico se il gioco è in corso per capise se gestire lo stato del gioco
-                // TODO fare una inizializzazione separata con un listener dedicato
-                /*
-                if (currentGame.runningProperty().getValue() && ) {
-                    pushButtonPressed();
-                }
-                */
-                
+                //Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Un pulsante ha cambiato stato da {0} a {1}.", new Object[]{oldValue, newValue});
+
                 // Al cambio dello stato del pulsante cambio il simbolo come feedback visivo di cosa succede sul palco
                 simbol.setValue(PushButtonStatus.parse(newValue));
+
+                // Nel caso il gioco sia in corso verifica se il pulsante è stato premuto
+                if (currentGame.runningProperty().getValue() && (PushButtonStatus.parse(newValue) == PushButtonStatus.PRESSED)) {
+                    //Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Un pushButton è stato premuto");
+                    pushButtonPressed();
+                }
             });
         });
+    }
+
+    /**
+     * Inizializza il comportamento della tabelle delle canzoni
+     */
+    private void songTableInit(ObservableList<Song> songs, TableView<Song> table) {
+        // Crea le versioni filtrate e ordinate della tabella
+        FilteredList<Song> filteredData = new FilteredList<>(songs, p -> true);
+        SortedList<Song> sortedData = new SortedList<>(filteredData);
+        sortedData.comparatorProperty().bind(table.comparatorProperty());
+
+        // Aggiunge i dati alla tabella
+        table.setItems(sortedData);
+
+        // Aggiunge il listener per la gestione dei filtri
+        songFilter.textProperty().addListener((observable, oldValue, newValue) -> {
+            filteredData.setPredicate(song -> {
+                // Se il filtro è vuto mostra tutte le canzoni
+                if (newValue == null || newValue.isEmpty()) {
+                    return true;
+                }
+
+                String lowerCaseFilter = newValue.toLowerCase();
+                boolean found = false;
+                // Verifica che l'id contenga il testo
+                found = found || currentGame.getSongID(song).toLowerCase().contains(lowerCaseFilter);
+                // Verifica che il titolo contenga il testo
+                found = found || song.getTitle().toLowerCase().contains(lowerCaseFilter);
+                return found;
+            });
+        });
+
+        // Imposta le tabella delle canzoni a selezione singola
+        table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+
+        // Imposta il listener per identificare il click sulla tabella
+        table.getSelectionModel().selectedItemProperty().addListener(
+                (observedValue, oldSong, newSong) -> {
+                    songSelection(newSong);
+                }
+        );
+
+        /*
+         Commento le impostazioni del drag and drop come annotazione per sviluppi futuri
+         */
+        // Inizio del drag and drop
+        /*        table.setOnDragDetected((MouseEvent event) -> {
+         Dragboard db = table.startDragAndDrop(TransferMode.MOVE);
+        
+         ClipboardContent content = new ClipboardContent();
+         content.putString(currentGame.getSongID(currentSong));
+         db.setContent(content);
+        
+         event.consume();
+         });*/
+        // Controlla le gestione del d&d dalla listra normale alla finale
+        /*        table.setOnDragOver((DragEvent event) -> {
+         if (event.getGestureSource() != table
+         && event.getDragboard().hasString()) {
+         event.acceptTransferModes(TransferMode.MOVE);
+         }
+         event.consume();
+         });*/
+        // Fine del drag and drop
+        /*        table.setOnDragDropped((DragEvent event) -> {
+         Dragboard db = event.getDragboard();
+         boolean success = false;
+         if (db.hasString() && (db.getString().equals(currentGame.getSongID(currentSong)))) {
+
+         // Utilizzando un metodo di inizializzazione unico è necessario distinguere
+         // la tabella sorgente dalla tabella di destinazione
+        
+         currentGame.moveSongToGame(currentSong);
+         success = true;
+         }
+         event.setDropCompleted(success);
+        
+         event.consume();
+         });*/
     }
 
     /**
@@ -359,10 +354,6 @@ public class GameController implements Initializable {
         } else {
             resetGameInterface();
             enablePlayerInterface(true);
-            
-            // Blocca i pulsanti del sarabanda per eliminare noiose pressioni inutili
-            SarabandaController.getInstance().sendSarabandaFullReset();
-            SarabandaController.getInstance().disableAllPushButton();
 
             // Assegna la canzone corrente
             currentSong = song;
@@ -435,110 +426,11 @@ public class GameController implements Initializable {
         }
 
         // Disabilita i pulsanti per la gestione delle risposte
-        correctButton.setDisable(true);
-        errorButton.setDisable(true);
+        enableGameValutationInterface(false);
 
         // Abilita le tabelle di scelta della canzone
         songTable.setDisable(false);
         finalSongTable.setDisable(false);
-    }
-
-    /**
-     * Gestisce l'inizio del gioco
-     */
-    public void startGame() {
-        currentGame.start();
-        
-        // Disabilita la scelta della canzone
-        songTable.setDisable(true);
-        finalSongTable.setDisable(true);
-
-        // Disabilita i pulsanti per la gestione delle risposte
-        correctButton.setDisable(true);
-        errorButton.setDisable(true);
-
-        // Abilita i push button
-        SarabandaController.getInstance().enableAllPushButton();
-
-        // Avvia la canzone
-        currentSong.play();
-    }
-
-    /**
-     * Gestisce la pressione di un pushButton
-     *
-     */
-    public void pushButtonPressed() {
-        // Ferma la canzone
-        currentSong.pause();
-
-        // Disabilita i pulsanti per il play o la pausa
-        if (forceGamePlay) enablePlayerInterface(false);
-
-        // Abilita i pulsanti per la gestione delle risposte
-        correctButton.setDisable(true);
-        correctButton.setDisable(true);
-    }
-
-    /**
-     * Un giocatore ha indovinato la canzone
-     */
-    @FXML
-    public void goodGame() {
-        // Imposta i push button non premuti con in errore
-        SarabandaController.getInstance().errorUnpressedPushButton();
-
-        // TODO Esegue suono di vittoria
-        
-        currentGame.stop();
-        resetGameInterface();
-    }
-
-    /**
-     * Gestisce lo stato del gioco con l'errore dei giocatori
-     */
-    @FXML
-    public void errorGame() {
-        // Invia un comando di errore al master del sarabanda
-        SarabandaController.getInstance().sendSarabandaError();
-        // Disabilita tutti i pulsanti non premuti per evitare pressioni spurie
-        SarabandaController.getInstance().disableAllPushButton();
-
-        // TODO Esegue suono di errore
-        // Riabilita l'interfaccia per eseguire il brano, in questo caso è necessario dare la possibile di continuare
-        enablePlayerInterface(true);
-
-        // TODO C'è il rischio che il giro SLAVE->MASTER->SLAVE sia troppo lento, valutare di rallentare
-        // Verifica se tutti i pulsanti sono in errore
-        boolean allInError = true;
-        for (PushButton button : SarabandaController.getInstance().getPushButton()) {
-            allInError = allInError && (button.getStatus() == PushButtonStatus.ERROR);
-        }
-
-        // Gioco concluso in errore, si comporta come il timeout
-        if (allInError) {
-            // Forsa lo stato dei pulsanti in errore con il doppio scopo di dare un segno visuale e bloccare i pulsanti
-            SarabandaController.getInstance().errorUnpressedPushButton();
-            
-            resetGameInterface();
-
-        }
-    }
-
-    /**
-     * Gestisce il comportamento del gioco in caso di timeout
-     */
-    public void timeoutGame() {
-        // Mette in pausa la traccia audio
-        currentSong.pause();
-
-        // Forsa lo stato dei pulsanti in errore con il doppio scopo di dare un segno visuale e bloccare i pulsanti
-        SarabandaController.getInstance().errorUnpressedPushButton();
-
-        // TODO Esegue il suono dell'errore finale
-        
-        currentGame.stop();
-        resetGameInterface();
     }
 
     /**
@@ -550,6 +442,138 @@ public class GameController implements Initializable {
     public void enablePlayerInterface(boolean status) {
         playButton.setDisable(!status);
         rewindButton.setDisable(!status);
+    }
+    
+    /**
+     * Si occupoa di abilitare/disabilitare i pulsanti per la valutazione del gioco
+     * 
+     * @param status 
+     */
+    public void enableGameValutationInterface(boolean status) {
+        // Abilita i pulsanti per la gestione delle risposte
+        errorButton.setDisable(!status);
+        correctButton.setDisable(!status);
+    }
+
+    /**
+     * Gestisce l'inizio del gioco
+     */
+    public void startGame() {
+        Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Inizio il gioco");
+        currentGame.start();
+
+        // Disabilita la scelta della canzone
+        songTable.setDisable(true);
+        finalSongTable.setDisable(true);
+
+        // Disabilita i pulsanti per la gestione delle risposte
+        enableGameValutationInterface(false);
+
+        // Effettua il reset completo dello stato dei pulsanti
+        SarabandaController.getInstance().sendSarabandaFullReset();
+
+        // Avvia la canzone
+        currentSong.play();
+    }
+
+    /**
+     * Gestisce la pressione di un pushButton
+     *
+     */
+    public void pushButtonPressed() {
+        Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Un pulsante è stato premuto");
+
+        // Ferma la canzone
+        currentSong.pause();
+
+        // Disabilita i pulsanti per il play o la pausa
+        if (forceGamePlay) {
+            enablePlayerInterface(false);
+        }
+
+        // Abilita i pulsanti per la gestione delle risposte
+        enableGameValutationInterface(true);
+    }
+    
+    /**
+     * Riprendo un gioco interrotto a seguito della pressione di un pushbutton o della messa in pausa
+     */
+    public void continueGame() {
+        // Disabilita i pulsanti per la gestione delle risposte
+        enableGameValutationInterface(false);
+
+        // Effettua il reset dello stato del sarabanda
+        SarabandaController.getInstance().sendSarabandaReset();
+
+        // Avvia la canzone
+        currentSong.play();
+    }
+
+    /**
+     * Un giocatore ha indovinato la canzone
+     */
+    @FXML
+    public void goodGame() {
+        Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Qualcuno ha indovinato");
+
+        // Imposta i push button non premuti con in errore
+        SarabandaController.getInstance().errorUnpressedPushButton();
+
+        // TODO Esegue suono di vittoria
+        
+        // Chiude la canzone corrente e resetta l'interfaccia
+        currentGame.stop();
+        resetGameInterface();
+    }
+
+    /**
+     * Gestisce lo stato del gioco con l'errore dei giocatori
+     */
+    @FXML
+    public void errorGame() {
+        Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Qualcuno ha sbagliato");
+
+        // Invia un comando di errore al master del sarabanda
+        SarabandaController.getInstance().sendSarabandaError();
+        
+        // TODO Esegue suono di errore
+
+        // Disabilita i pulsanti per la valutazione
+        enableGameValutationInterface(false);
+        // Riabilita l'interfaccia per eseguire il brano, in questo caso è necessario dare la possibile di continuare
+        enablePlayerInterface(true);
+
+        // TODO C'è il rischio che il giro SLAVE->MASTER->SLAVE sia troppo lento, valutare di rallentare
+        // Verifica se tutti i pulsanti sono in errore
+        boolean allInError = true;
+        for (PushButton button : SarabandaController.getInstance().getPushButton()) {
+            allInError = allInError && (button.getStatus() == PushButtonStatus.ERROR);
+        }
+
+        // Gioco concluso in errore chiude il gioco e resetta l'inrefaccia
+        if (allInError) {
+            currentGame.stop();
+            resetGameInterface();
+        }
+    }
+
+    /**
+     * Gestisce il comportamento del gioco in caso di timeout
+     */
+    public void timeoutGame() {
+        Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Siamo in timeout");
+
+        // Mette in pausa la traccia audio
+        currentSong.pause();
+
+        // Forsa lo stato dei pulsanti in errore con il doppio scopo di dare un segno visuale e bloccare i pulsanti
+        SarabandaController.getInstance().errorUnpressedPushButton();
+
+        // TODO Esegue il suono dell'errore finale
+        
+        // Chiude il gioco e resetta l'interfaccia
+        currentGame.stop();
+        resetGameInterface();
     }
 
     /**
@@ -576,7 +600,7 @@ public class GameController implements Initializable {
         String second = format.format((int) Math.floor(absoluteTime / 1000) % 60);
         String millis = format.format((int) Math.floor(absoluteTime % 1000) / 10);
 
-        Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Aggiorno il contatempo con i valori {0}{1}:{2}.{3}", new Object[]{sign, minute, second, millis});
+        //Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Aggiorno il contatempo con i valori {0}{1}:{2}.{3}", new Object[]{sign, minute, second, millis});
 
         String timeStr = new StringBuilder()
                 .append(sign)
@@ -599,11 +623,12 @@ public class GameController implements Initializable {
     }
 
     /**
-     * Ricarica le canzoni
+     * Carica la lista delle canzoni
      *
      * @param path
      */
     public void loadGameSong(String path) {
+        Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Carico la lista delle canzoni");
         currentGame.loadMediaListFromDirectory(path);
     }
 
@@ -616,8 +641,11 @@ public class GameController implements Initializable {
             if ("Pause".equals(playButton.getText())) {
                 currentSong.pause();
             } else {
-                SarabandaController.getInstance().enableAllPushButton();
-                currentSong.play();
+                if (currentGame.isRunning()) {
+                    continueGame();
+                } else {
+                    startGame();
+                }
             }
         }
     }
@@ -681,5 +709,4 @@ public class GameController implements Initializable {
     public void handleMoveToSongList() {
         currentGame.moveSongToGame(currentSong);
     }
-
 }

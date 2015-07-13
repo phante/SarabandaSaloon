@@ -1,7 +1,17 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright 2015 deltedes.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.phante.sarabandasaloon.network;
 
@@ -51,8 +61,10 @@ public class SarabandaController {
     
     final String buttonCommandRegex;
 
+    // Porta di invio
+    private final static int UDP_SENDPORT = 8889;
     // Porta di ascolto
-    private final static int UDPPORT = 8888;
+    private final static int UDP_RECEIVEPORT = 8888;
 
     // Memorizzare l'indirizzo di broadcast
     private InetAddress broadcastAddress;
@@ -71,8 +83,12 @@ public class SarabandaController {
      * occupa della lettura dei pacchetti di rete e i pulsanti.
      */
     private SarabandaController() {
+        // Imposta l'indirizzo di broascast
+        //broadcastAddress = InetAddress.getByName("255.255.255.255");
+        broadcastAddress = InetAddress.getLoopbackAddress(); // TEST per non spammare sulla rete
+        
         // Inizializza il Service UDP
-        initUDPService(UDPPORT);
+        initUDPService(UDP_RECEIVEPORT);
 
         // Crea i pulsanti del sarabanda
         for (int i = 0; i < BUTTON_NUMBER; i++) {
@@ -110,9 +126,7 @@ public class SarabandaController {
      */
     private void initUDPService(int port) {
         try {
-            // Imposta l'indirizzo di broascast
-            //broadcastAddress = InetAddress.getByName("255.255.255.255");
-            broadcastAddress = InetAddress.getLoopbackAddress(); // TEST per non spammare sulla rete
+
 
             InetAddress localAddress = InetAddress.getLocalHost();
 
@@ -166,7 +180,9 @@ public class SarabandaController {
      */
     private void parseMessage(String message) {
         // Verifico il comando
+        Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Effettuo il parsing del messaggio {0}", message);
         if (message.matches(buttonCommandRegex)) {
+            Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Il messaggio {0} indica un cambio di stato dei pulsanti", message);
             String button = message.substring(message.length() - 4);
             for (int i = 0; buttons.size() > i; i++) {
                 PushButtonStatus status = PushButtonStatus.parse(button.substring(i, i + 1));
@@ -281,7 +297,7 @@ public class SarabandaController {
                 .append(SarabandaController.MESSAGE_HEADER)
                 .append(message)
                 .toString(),
-                UDPPORT,
+                UDP_SENDPORT,
                 broadcastAddress);
     }
 
