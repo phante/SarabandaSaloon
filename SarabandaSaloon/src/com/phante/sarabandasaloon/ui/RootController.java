@@ -16,7 +16,7 @@
 package com.phante.sarabandasaloon.ui;
 
 
-import com.phante.sarabandasaloon.network.SarabandaController;
+import com.phante.sarabandasaloon.network.SarabandaSlaveController;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -76,7 +76,7 @@ public class RootController implements Initializable {
             tabPane.getTabs().setAll(gameTab);
             
             // Avvia il server
-            SarabandaController.getInstance().startServer();
+            SarabandaSlaveController.getInstance().startServer();
             
             gameController.loadGameSong("D:\\mp3");
             //gameController.loadGameSong("/Users/elvisdeltedesco/Music/iTunes/iTunes Music/Music/AC_DC/Black Ice");

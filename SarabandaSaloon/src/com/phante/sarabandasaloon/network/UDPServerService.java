@@ -85,7 +85,7 @@ public class UDPServerService extends Service<Void> {
             @Override
             protected Void call() {
                 try {
-                    Logger.getLogger(UDPServerService.class.getName()).log(Level.INFO, "Avvio il server UDP");
+                    Logger.getLogger(UDPServerService.class.getName()).log(Level.INFO, "Avvio il server UDP in ascolto sulla porta {0}", serverUdpPort);
                     // Apre il socket
                     DatagramSocket socket = new DatagramSocket(serverUdpPort);
                     socket.setBroadcast(true);

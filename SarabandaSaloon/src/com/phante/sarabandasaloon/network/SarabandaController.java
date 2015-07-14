@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Elvis Del Tedesco
+ * Copyright 2015 deltedes.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 package com.phante.sarabandasaloon.network;
 
-import com.phante.sarabandasaloon.entity.PushButtonStatus;
 import com.phante.sarabandasaloon.entity.PushButton;
+import com.phante.sarabandasaloon.entity.PushButtonStatus;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -26,6 +26,8 @@ import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -40,13 +42,17 @@ import javafx.concurrent.Worker;
  */
 public class SarabandaController {
 
-    // Numero dei pulsanti del sarabanda
-    private final static int BUTTON_NUMBER = 4;
-
     // Stati del server udp
     public final static int SERVER_STARTED = 0;
     public final static int SERVER_UNKNOWN = 1;
     public final static int SERVER_STOPPED = 2;
+
+    // Numero dei pulsanti del sarabanda
+    private final static int BUTTON_NUMBER = 4;
+
+    protected final static int UDP_MASTER_PORT = 8888;
+    protected final static int UDP_SLAVE_PORT = 8889;
+    protected final static int UDP_SLAVE_CLASSIC_PORT = 8888;
 
     // Header standard del pacchetto Sarabanda
     final static String MESSAGE_HEADER = "SRBND-";
@@ -58,87 +64,85 @@ public class SarabandaController {
     final static String DEMO_COMMAND = "DEMO";
     final static String HWRESET_COMMAND = "X";
     final static String BUTTON_COMMAND = "B";
-    
+
     final String buttonCommandRegex;
 
     // Porta di invio
-    private final static int UDP_SENDPORT = 8889;
+    protected int udpSendPort;
     // Porta di ascolto
-    private final static int UDP_RECEIVEPORT = 8888;
-
-    // Memorizzare l'indirizzo di broadcast
-    private InetAddress broadcastAddress;
+    protected int udpListenPort;
+    // Memorizzare l'indirizzo di broadcast, impostata di default come loopback per sicurezza
+    protected InetAddress broadcastAddress;
 
     // Server UDP per la comunicazione con il master
-    private UDPServerService udpservice;
+    protected UDPServerService udpservice;
+
+    // Imposta la modalità classica
+    protected final ReadOnlyBooleanWrapper classicModeProperty = new ReadOnlyBooleanWrapper();
+    // Identifica il funzionamento su solo localhost senza usare il broadcast
+    protected final ReadOnlyBooleanWrapper onlyLocalhostModeProperty = new ReadOnlyBooleanWrapper();
+
     // Memorizza lo stato del server
-    private final ReadOnlyIntegerWrapper serverStatus = new ReadOnlyIntegerWrapper();
+    protected final ReadOnlyIntegerWrapper serverStatus = new ReadOnlyIntegerWrapper();
     // Memorizza l'ultimo messaggio arrivato
-    private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper();
+    protected final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper();
     // Stato dei pulsanti
-    private final ObservableList<PushButton> buttons = FXCollections.observableArrayList();
+    protected final ObservableList<PushButton> buttons = FXCollections.observableArrayList();
 
     /**
      * Inizializza lo stato del controller andando a creare il servizio che si
      * occupa della lettura dei pacchetti di rete e i pulsanti.
      */
-    private SarabandaController() {
-        // Imposta l'indirizzo di broascast
-        //broadcastAddress = InetAddress.getByName("255.255.255.255");
-        broadcastAddress = InetAddress.getLoopbackAddress(); // TEST per non spammare sulla rete
-        
-        // Inizializza il Service UDP
-        initUDPService(UDP_RECEIVEPORT);
+    protected SarabandaController() {
+        Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Inizializzo il controller");
+
+        // Imposta la modalità di funzionamento a nuovo
+        udpSendPort = UDP_SLAVE_PORT;
+        udpListenPort = UDP_MASTER_PORT;
+        classicModeProperty.setValue(Boolean.FALSE);
+
+        // Imposta la modalità solo localhost
+        broadcastAddress = InetAddress.getLoopbackAddress();
+        onlyLocalhostModeProperty.setValue(Boolean.TRUE);
 
         // Crea i pulsanti del sarabanda
         for (int i = 0; i < BUTTON_NUMBER; i++) {
             buttons.add(new PushButton());
         }
-        
+
         // Espressione regolare per identificare un pacchetto pulsanti valido
         StringBuffer regex = new StringBuffer()
                 .append("^")
                 .append(MESSAGE_HEADER)
                 .append(BUTTON_COMMAND)
                 .append("[");
-        for (PushButtonStatus status: PushButtonStatus.values()) {
+        for (PushButtonStatus status : PushButtonStatus.values()) {
             regex.append(status);
         }
         regex.append("]{")
                 .append(buttons.size())
                 .append("}");
-        
+
         buttonCommandRegex = regex.toString();
-
-    }
-
-    public static SarabandaController getInstance() {
-        return SarabandaControllerHolder.INSTANCE;
-    }
-
-    private static class SarabandaControllerHolder {
-
-        private static final SarabandaController INSTANCE = new SarabandaController();
     }
 
     /**
-     * Inizializza il service UDP per la gestione della comunicazione di rete
+     * Inizializza il service UDP per la ricezione dei pacchetti di rete
      */
-    private void initUDPService(int port) {
+    protected void initUDPService() {
+        Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Inizializzo il processo listener su {0}", udpSendPort);
         try {
-
-
             InetAddress localAddress = InetAddress.getLocalHost();
 
-            // Creao il servizio
-            udpservice = new UDPServerService(port);
+            // Creo il servizio
+            udpservice = new UDPServerService(udpListenPort);
 
             // Listener per identificare l'arrivio di un nuovo pacchetto
             udpservice.packetProperty().addListener(((observableValue, oldValue, newValue) -> {
                 // Ignoro i messaggi che arrivano da me stesso
                 //if (localAddress.getHostAddress().equals(udpservice.senderProperty().getValue())) 
                 {
-                // Effettua il parsing del messaggio il messaggio, uso il runLater 
+                    // Effettua il parsing del messaggio il messaggio, uso il runLater 
                     // per disaccoppiare i thread e consentire la modifica della UI
                     // dal thread principale
                     Platform.runLater(() -> {
@@ -170,19 +174,69 @@ public class SarabandaController {
     }
 
     /**
-     * Effettua il parsing dei messaggi. Per definizione il software è uno slave
-     * e quindi va a gestire solo ed esclusivamente i messaggi di tipo B in
-     * quanto quelli normalmente inviati dal Master. I messaggi ERROR, FULLRESET
-     * e RESET sono messaggi inviati dagli slave per comandare lo stato del
-     * master.
+     *
+     * @param classicMode
+     */
+    public void setClassicMode(boolean classicMode) {
+        classicModeProperty.setValue(classicMode);
+        if (classicMode) {
+            udpSendPort = UDP_SLAVE_CLASSIC_PORT;
+            udpListenPort = UDP_MASTER_PORT;
+        } else {
+            udpSendPort = UDP_SLAVE_PORT;
+            udpListenPort = UDP_MASTER_PORT;
+        }
+
+        Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Cambio della modalità con invio alla porta {0}", udpSendPort);
+    }
+
+    /**
+     *
+     * @param localhostOnly
+     */
+    public void setLocalhostOnly(boolean localhostOnly) {
+        onlyLocalhostModeProperty.setValue(localhostOnly);
+
+        // Imposta l'indirizzo di broascast
+        if (localhostOnly) {
+            broadcastAddress = InetAddress.getLoopbackAddress();
+        } else {
+            try {
+                broadcastAddress = InetAddress.getByName("255.255.255.255");
+            } catch (UnknownHostException ex) {
+                Logger.getLogger(SarabandaController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Cambio della modalità con invio su indirizzo {0}", broadcastAddress.getHostAddress());
+    }
+
+    /**
+     * Effettua il parsing dei messaggi.
      *
      * @param message
      */
     private void parseMessage(String message) {
-        // Verifico il comando
+        Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Effettuo il parsing del messaggio {0}", message);
+        
+        // Verifico se il messaggio ricevuto rispetta le condizioni 
+        parseButtonMessage(message);
+        parseErrorMessage(message);
+        parseResetMessage(message);
+        parseFullResetMessage(message);
+        
+        // Invio lo stato dei pulsanti
+        sendPushButtonStatus();
+    }
+
+    /**
+     * 
+     * @param message 
+     */
+    protected void parseButtonMessage(String message) {
         Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Effettuo il parsing del messaggio {0}", message);
         if (message.matches(buttonCommandRegex)) {
-            Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Il messaggio {0} indica un cambio di stato dei pulsanti", message);
+            Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Il messaggio {0} indica un cambio di stato dei pulsanti secondo {1}", new Object[]{message, buttonCommandRegex});
             String button = message.substring(message.length() - 4);
             for (int i = 0; buttons.size() > i; i++) {
                 PushButtonStatus status = PushButtonStatus.parse(button.substring(i, i + 1));
@@ -192,9 +246,61 @@ public class SarabandaController {
     }
 
     /**
+     * 
+     * @param message 
+     */
+    protected void parseFullResetMessage(String message) {
+        Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Effettuo il parsing del messaggio {0}", message);
+        if (message.matches("SRBND-F.*")) {
+            Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Il messaggio {0} indica un full reset secondo {1}", new Object[]{message, "SRBND-F.*"});
+            buttons.stream().forEach((button) -> {
+                button.setStatus(PushButtonStatus.ENABLED);
+            });
+        }
+    }
+
+    /**
+     * 
+     * @param message 
+     */
+    protected void parseResetMessage(String message) {
+        Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Effettuo il parsing del messaggio {0}", message);
+        if (message.matches("SRBND-R.*")) {
+            Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Il messaggio {0} indica un reste secondo {1}", new Object[]{message, "SRBND-R.*"});
+            buttons.stream().forEach((button) -> {
+                if (button.getStatus() == PushButtonStatus.PRESSED) {
+                    button.setStatus(PushButtonStatus.ENABLED);
+                }
+            });
+        }
+    }
+
+    /**
+     * 
+     * @param message 
+     */
+    protected void parseErrorMessage(String message) {
+        Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Effettuo il parsing del messaggio {0}", message);
+        if (message.matches("SRBND-E.*")) {
+            Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Il messaggio {0} indica un errore secondo {1}", new Object[]{message, "SRBND-E.*"});
+            buttons.stream().forEach((button) -> {
+                if (button.getStatus() == PushButtonStatus.PRESSED) {
+                    button.setStatus(PushButtonStatus.ERROR);
+                }
+            });
+        }
+    }
+
+    /*
      * Avvia il servizio UDP
      */
     public void startServer() {
+        Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Avvio il server");
+        // Se non 
+        if (udpservice == null) {
+            this.initUDPService();
+        }
+        
         // Ripulisce lo stato del task
         if ((udpservice.getState() == Worker.State.CANCELLED) || (udpservice.getState() == Worker.State.FAILED)) {
             udpservice.reset();
@@ -212,80 +318,91 @@ public class SarabandaController {
      * bloccante
      */
     public void stopServer() {
-        if (udpservice.isRunning()) {
-            // Invia al servizio il comando di spegnersi
-            udpservice.cancel();
+        Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Spengo il server");
+        if (udpservice != null) {
+            if (udpservice.isRunning()) {
+                // Invia al servizio il comando di spegnersi
+                udpservice.cancel();
 
-            // Invia un pacchetto UDP generico per andare a far uscire il server dallo stato di listen
-            // necessario in quanto la lettura del socket è bloccante
-            sendSarabandaMessage("");
+                // Invia un pacchetto UDP generico a se stesso per andare a far 
+                // uscire il server dallo stato di listen necessario in quanto 
+                // la lettura del socket è bloccante
+                sendPacket(new StringBuilder()
+                        .append(SarabandaController.MESSAGE_HEADER)
+                        .append(message)
+                        .toString(),
+                        udpListenPort,
+                        broadcastAddress);
+            }
         }
     }
 
+    /**
+     * 
+     */
     public void sendSarabandaReset() {
         sendSarabandaMessage(SarabandaController.RESET_COMMAND);
     }
 
+    /**
+     * 
+     */
     public void sendSarabandaFullReset() {
         sendSarabandaMessage(SarabandaController.FULLRESET_COMMAND);
     }
 
+    /**
+     * 
+     */
     public void sendSarabandaError() {
         sendSarabandaMessage(SarabandaController.ERROR_COMMAND);
     }
 
+    /**
+     * 
+     */
     public void sendSarabandaDemo() {
         sendSarabandaMessage(SarabandaController.DEMO_COMMAND);
     }
 
+    /**
+     * 
+     */
     public void sendSarabandaMasterPhysicalReset() {
         sendSarabandaMessage(SarabandaController.HWRESET_COMMAND);
     }
+    
+    /**
+     * 
+     */
+    public void sendPushButtonStatus() {
+        Logger.getLogger(SarabandaController.class.getName()).log(Level.INFO, "Invio lo stato dei pulsanti");
+        StringBuffer _message = new StringBuffer().append(SarabandaController.BUTTON_COMMAND);
 
-    /**
-     * Invia un comando di disabilitazione dei pulsanti, utile per evitare pressioni fuori sequenza
-     * in una fase di gioco fermo
-     * 
-     */
-    public void enableAllPushButton() {
-        StringBuffer _message = new StringBuffer().append(SarabandaController.BUTTON_COMMAND);
-        
-        buttons.stream().forEach((_item) -> {
-            _message.append(_item.getStatus() == PushButtonStatus.DISABLED? PushButtonStatus.ENABLED: _item.getStatus());
+        buttons.stream().forEach((button) -> {
+            _message.append(button.getStatus());
         });
-                
-        sendSarabandaMessage(_message.toString());
-    }
-    
-    /**
-     * Invia un comando di disabilitazione dei pulsanti, utile per evitare pressioni fuori sequenza
-     * in una fase di gioco fermo
-     * 
-     */
-    public void disableAllPushButton() {
-        StringBuffer _message = new StringBuffer().append(SarabandaController.BUTTON_COMMAND);
-        
-        buttons.stream().forEach((_item) -> {
-            _message.append(_item.getStatus() == PushButtonStatus.ENABLED ? PushButtonStatus.DISABLED : _item.getStatus());
-        });
-                
-        sendSarabandaMessage(_message.toString());
-    }
-    
-    /**
-     * Manda in errore tutti i pulsanti non premuti
-     * 
-     */
-    public void errorUnpressedPushButton() {
-        StringBuffer _message = new StringBuffer().append(SarabandaController.BUTTON_COMMAND);
-        
-        buttons.stream().forEach((_item) -> {
-            _message.append(_item.getStatus() == PushButtonStatus.PRESSED? _item.getStatus(): PushButtonStatus.ERROR);
-        });
-                
+
         sendSarabandaMessage(_message.toString());
     }
 
+    /**
+     * 
+     * @param buttonId 
+     */
+    public void sendPushButtonPressed(int buttonId) {
+        StringBuffer _message = new StringBuffer().append(SarabandaController.BUTTON_COMMAND);
+
+        for (int i = 0; i < buttons.size(); i++) {
+            if (i == buttonId) {
+                _message.append(PushButtonStatus.PRESSED);
+            } else {
+                _message.append(buttons.get(i).getStatus());
+            }
+        }
+
+        sendSarabandaMessage(_message.toString());
+    }
 
     /**
      * Invia un messaggio Sarabanda
@@ -297,7 +414,7 @@ public class SarabandaController {
                 .append(SarabandaController.MESSAGE_HEADER)
                 .append(message)
                 .toString(),
-                UDP_SENDPORT,
+                udpSendPort,
                 broadcastAddress);
     }
 
@@ -334,21 +451,28 @@ public class SarabandaController {
     public ReadOnlyIntegerProperty serverStatusProperty() {
         return serverStatus.getReadOnlyProperty();
     }
-    
+
     /**
-     * 
-     * @return 
+     *
+     * @return
      */
     public ReadOnlyStringProperty messageProperty() {
         return message.getReadOnlyProperty();
     }
-    
+
     /**
-     * 
-     * @return 
+     *
+     * @return
      */
     public ObservableList<PushButton> getPushButton() {
         return buttons;
     }
 
+    public ReadOnlyBooleanProperty classicModeProperty() {
+        return classicModeProperty.getReadOnlyProperty();
+    }
+
+    public ReadOnlyBooleanProperty onlyLocalhostModeProperty() {
+        return onlyLocalhostModeProperty.getReadOnlyProperty();
+    }
 }

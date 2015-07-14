@@ -15,7 +15,7 @@
  */
 package com.phante.sarabandasaloon.ui;
 
-import com.phante.sarabandasaloon.network.SarabandaController;
+import com.phante.sarabandasaloon.network.SarabandaSlaveController;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.beans.property.ReadOnlyIntegerProperty;
@@ -46,18 +46,18 @@ public class NetworkController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        ReadOnlyIntegerProperty status = SarabandaController.getInstance().serverStatusProperty();
+        ReadOnlyIntegerProperty status = SarabandaSlaveController.getInstance().serverStatusProperty();
 
         serverStatusChangeListener = (ObservableValue<? extends Number> observableValue, Number oldValue, Number newValue) -> {
             switch (newValue.intValue()) {
-                case SarabandaController.SERVER_STARTED: 
+                case SarabandaSlaveController.SERVER_STARTED: 
                     serverStatus.setIndeterminate(false);
                     serverStatus.setSelected(true);
                     break;
-                case SarabandaController.SERVER_UNKNOWN: 
+                case SarabandaSlaveController.SERVER_UNKNOWN: 
                     serverStatus.setIndeterminate(true);
                     break;
-                case SarabandaController.SERVER_STOPPED: 
+                case SarabandaSlaveController.SERVER_STOPPED: 
                     serverStatus.setIndeterminate(false);
                     serverStatus.setSelected(false);
                     break;
@@ -67,7 +67,7 @@ public class NetworkController implements Initializable {
         };
         status.addListener(serverStatusChangeListener);
         
-        SarabandaController.getInstance().startServer();
+        SarabandaSlaveController.getInstance().startServer();
     }
 
     @FXML
@@ -77,22 +77,22 @@ public class NetworkController implements Initializable {
 
     @FXML
     private void handleFullReset() {
-        SarabandaController.getInstance().sendSarabandaFullReset();
+        SarabandaSlaveController.getInstance().sendSarabandaFullReset();
     }
 
     @FXML
     private void handleReset() {
-        SarabandaController.getInstance().sendSarabandaReset();
+        SarabandaSlaveController.getInstance().sendSarabandaReset();
     }
 
     @FXML
     private void handleError() {
-        SarabandaController.getInstance().sendSarabandaError();
+        SarabandaSlaveController.getInstance().sendSarabandaError();
     }
 
     @FXML
     private void handleServerStatus() {
-        SarabandaController sarabanda = SarabandaController.getInstance();
+        SarabandaSlaveController sarabanda = SarabandaSlaveController.getInstance();
         if (serverStatus.isSelected()) {
             sarabanda.stopServer();
         } else {
@@ -102,7 +102,7 @@ public class NetworkController implements Initializable {
 
     @FXML
     private void handleMasterReset() {
-        SarabandaController.getInstance().sendSarabandaMasterPhysicalReset();
+        SarabandaSlaveController.getInstance().sendSarabandaMasterPhysicalReset();
     }
 
 }

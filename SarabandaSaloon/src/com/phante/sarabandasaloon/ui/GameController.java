@@ -19,7 +19,7 @@ import com.phante.sarabandasaloon.entity.PushButtonStatus;
 import com.phante.sarabandasaloon.entity.Game;
 import com.phante.sarabandasaloon.entity.PushButton;
 import com.phante.sarabandasaloon.entity.Song;
-import com.phante.sarabandasaloon.network.SarabandaController;
+import com.phante.sarabandasaloon.network.SarabandaSlaveController;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ResourceBundle;
@@ -205,13 +205,13 @@ public class GameController implements Initializable {
         pushButtonStatusPaneInit();
 
         // Inizializza gli elementi della status bar
-        messageLabel.textProperty().bind(SarabandaController.getInstance().messageProperty());
-        SarabandaController.getInstance().serverStatusProperty().addListener((observable, oldValue, newValue) -> {
+        messageLabel.textProperty().bind(SarabandaSlaveController.getInstance().messageProperty());
+        SarabandaSlaveController.getInstance().serverStatusProperty().addListener((observable, oldValue, newValue) -> {
             switch (newValue.intValue()) {
-                case SarabandaController.SERVER_STARTED:
+                case SarabandaSlaveController.SERVER_STARTED:
                     listenerLabel.setText("Listener acceso");
                     break;
-                case SarabandaController.SERVER_STOPPED:
+                case SarabandaSlaveController.SERVER_STOPPED:
                     listenerLabel.setText("Listener spento");
                     break;
                 default:
@@ -229,7 +229,7 @@ public class GameController implements Initializable {
         double maxSize = 100;
 
         // Inizializza i simboli per i singoli pulsanti
-        SarabandaController.getInstance().getPushButton().stream().forEach((button) -> {
+        SarabandaSlaveController.getInstance().getPushButton().stream().forEach((button) -> {
             // Crea il simbolo
             PushButtonSimbol simbol = new PushButtonSimbol();
 
@@ -470,7 +470,7 @@ public class GameController implements Initializable {
         enableGameValutationInterface(false);
 
         // Effettua il reset completo dello stato dei pulsanti
-        SarabandaController.getInstance().sendSarabandaFullReset();
+        SarabandaSlaveController.getInstance().sendSarabandaFullReset();
 
         // Avvia la canzone
         currentSong.play();
@@ -503,7 +503,7 @@ public class GameController implements Initializable {
         enableGameValutationInterface(false);
 
         // Effettua il reset dello stato del sarabanda
-        SarabandaController.getInstance().sendSarabandaReset();
+        SarabandaSlaveController.getInstance().sendSarabandaReset();
 
         // Avvia la canzone
         currentSong.play();
@@ -517,7 +517,7 @@ public class GameController implements Initializable {
         Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Qualcuno ha indovinato");
 
         // Imposta i push button non premuti con in errore
-        SarabandaController.getInstance().errorUnpressedPushButton();
+        //SarabandaSlaveController.getInstance().errorUnpressedPushButton();
 
         // TODO Esegue suono di vittoria
         
@@ -534,7 +534,7 @@ public class GameController implements Initializable {
         Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Qualcuno ha sbagliato");
 
         // Invia un comando di errore al master del sarabanda
-        SarabandaController.getInstance().sendSarabandaError();
+        SarabandaSlaveController.getInstance().sendSarabandaError();
         
         // TODO Esegue suono di errore
 
@@ -546,7 +546,7 @@ public class GameController implements Initializable {
         // TODO C'è il rischio che il giro SLAVE->MASTER->SLAVE sia troppo lento, valutare di rallentare
         // Verifica se tutti i pulsanti sono in errore
         boolean allInError = true;
-        for (PushButton button : SarabandaController.getInstance().getPushButton()) {
+        for (PushButton button : SarabandaSlaveController.getInstance().getPushButton()) {
             allInError = allInError && (button.getStatus() == PushButtonStatus.ERROR);
         }
 
@@ -567,7 +567,7 @@ public class GameController implements Initializable {
         currentSong.pause();
 
         // Forsa lo stato dei pulsanti in errore con il doppio scopo di dare un segno visuale e bloccare i pulsanti
-        SarabandaController.getInstance().errorUnpressedPushButton();
+        //SarabandaSlaveController.getInstance().errorUnpressedPushButton();
 
         // TODO Esegue il suono dell'errore finale
         
@@ -692,12 +692,12 @@ public class GameController implements Initializable {
 
     @FXML
     public void handleSarabandaReset() {
-        SarabandaController.getInstance().sendSarabandaReset();
+        SarabandaSlaveController.getInstance().sendSarabandaReset();
     }
 
     @FXML
     public void handleSarabandaFullReset() {
-        SarabandaController.getInstance().sendSarabandaFullReset();
+        SarabandaSlaveController.getInstance().sendSarabandaFullReset();
     }
 
     @FXML

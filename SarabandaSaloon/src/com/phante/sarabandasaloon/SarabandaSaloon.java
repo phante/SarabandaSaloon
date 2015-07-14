@@ -15,7 +15,7 @@
  */
 package com.phante.sarabandasaloon;
 
-import com.phante.sarabandasaloon.network.SarabandaController;
+import com.phante.sarabandasaloon.network.SarabandaSlaveController;
 import com.phante.sarabandasaloon.ui.RootController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -39,7 +39,7 @@ public class SarabandaSaloon extends Application {
         ((RootController)rootloader.getController()).setStage(primaryStage);
         
         // Inizializza il controller del Sarabanda
-        SarabandaController sarabanda = SarabandaController.getInstance();
+        SarabandaSlaveController sarabanda = SarabandaSlaveController.getInstance();
 
         Scene scene = new Scene(rootLayout);
         
