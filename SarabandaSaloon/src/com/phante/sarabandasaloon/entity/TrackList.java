@@ -45,6 +45,14 @@ public class TrackList {
     // Lista della canzoni per la manche finale
     private final ObservableList<Song> finalSongList = FXCollections.observableArrayList();
     
+    private TrackList() {
+        name.setValue("Nuova tracklist");
+    }
+    
+    public TrackList(String trackListName) {
+        name.setValue(trackListName);
+    }
+    
     /**
      * Carica la lista dei file audio con estensione mp3 o m4a dal path indicato
      *
@@ -94,7 +102,6 @@ public class TrackList {
         return songList;
     }
     
-    //@XmlElement(name = "song")
     public List<Song> getSongs () {
         return songList.subList(0, songList.size());
     }
@@ -108,7 +115,6 @@ public class TrackList {
         return finalSongList;
     }
     
-    //@XmlElement(name = "finalSong")
     public List<Song> getFinalSongs () {
         return finalSongList.subList(0, finalSongList.size());
     }

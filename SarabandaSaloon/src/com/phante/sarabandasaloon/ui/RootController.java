@@ -69,7 +69,7 @@ public class RootController implements Initializable {
             gameTab.setContent(gamePage);
             gameTab.setText("Game");
 
-            TrackList tl = new TrackList();
+            TrackList tl = new TrackList("Nuova tracklist");
             String source = getDefaultDirectoryFilePath().getAbsolutePath();
             tl.loadMediaListFromDirectory(source);
             saveTrackListDataToFile(tl);
@@ -113,7 +113,7 @@ public class RootController implements Initializable {
         gameTab.setContent(gamePage);
         gameTab.setText("Game");
 
-        TrackList tl = new TrackList();
+        TrackList tl = new TrackList("caricata fresca fresca");
         String source = getDefaultDirectoryFilePath().getAbsolutePath();
         tl.loadMediaListFromDirectory(source);
         saveTrackListDataToFile(tl);
