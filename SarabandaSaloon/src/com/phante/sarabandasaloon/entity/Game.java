@@ -15,11 +15,6 @@
  */
 package com.phante.sarabandasaloon.entity;
 
-import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,8 +22,6 @@ import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 
 /**
  *
@@ -40,28 +33,20 @@ public class Game {
     // Indica se la manche è in corso
     private final ReadOnlyBooleanWrapper running = new ReadOnlyBooleanWrapper();
     // Lista delle canzoni
-    private final ObservableList<Song> songs = FXCollections.observableArrayList();
+    //private final ObservableList<Song> songs = FXCollections.observableArrayList();
     // Lista della canzoni per la manche finale
-    private final ObservableList<Song> finalSongs = FXCollections.observableArrayList();
+    //private final ObservableList<Song> finalSongs = FXCollections.observableArrayList();
+    
+    TrackList trackList;
+        
+    public Game(TrackList newList) {
+        trackList = newList;
+    }
+    
+    public TrackList getTrackList() {
+        return trackList;
+    }
 
-       
-    /**
-     * La lista delle canzoni
-     * 
-     * @return 
-     */
-    public ObservableList<Song> getSongs () {
-        return songs;
-    }
-    
-    /**
-     * La lista delle canzoni per il finale
-     * @return 
-     */
-    public ObservableList<Song> getFinalSongs() {
-        return finalSongs;
-    }
-    
     public ReadOnlyBooleanProperty runningProperty() {
         return running.getReadOnlyProperty();
     }
@@ -84,55 +69,29 @@ public class Game {
      * @param search
      * @return 
      */
-    public StringProperty getSongIDProperty(Song search) {
-        StringProperty id = new SimpleStringProperty();
-        id.setValue("undefined");
-        
-        // Cerca la canzone sulla lista normale
-        int songId = songs.indexOf(search);
-        if (songId != -1) {
-            DecimalFormat format = new DecimalFormat("000");
-            id.setValue(format.format(songId + 1));
-        } else {
-            songId = finalSongs.indexOf(search);
-            if (songId != -1) {
-                String c = new StringBuilder().append((char) ('A' + (char)songId)).toString();
-                id.setValue(c);
-            }
-        }
-        return id;
-    }
+    /*public StringProperty getSongIDProperty(Song search) {
+    StringProperty id = new SimpleStringProperty();
+    id.setValue("undefined");
     
-    public String getSongID(Song search) {
-        return getSongIDProperty(search).getValue();
+    // Cerca la canzone sulla lista normale
+    int songId = trackList.songListProperty().indexOf(search);
+    if (songId != -1) {
+    DecimalFormat format = new DecimalFormat("000");
+    id.setValue(format.format(songId + 1));
+    } else {
+    songId = trackList.finalSongsListProperty().indexOf(search);
+    if (songId != -1) {
+    String c = new StringBuilder().append((char) ('A' + (char)songId)).toString();
+    id.setValue(c);
     }
+    }
+    return id;
+    }*/
     
-    /**
-     * Carica la lista dei file audio con estensione mp3 o m4a dal path indicato
-     *
-     * @param path
-     */
-    public void loadMediaListFromDirectory(String path) {        
-        // Ripulisce il contenuto delle liste
-        songs.clear();
-        finalSongs.clear();
-
-        // Legge i file e crea le canzoni associate
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(path), "*.{mp3, m4a}")) {
-            for (Path entry : stream) {
-                // identifica il comportamento dal nome del file
-                String fileName = entry.getFileName().toString();
-                if (fileName.matches("[\\d]+-(.*)")) {
-                    finalSongs.add(new Song(entry.toUri().toURL().toString()));
-                } else {
-                    songs.add(new Song(entry.toUri().toURL().toString()));
-                }
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
+    /*public String getSongID(Song search) {
+    return getSongIDProperty(search).getValue();
+    }*/
+    
     /**
      * Sposta la canzone indicata dalla lista normale alla lista delle finali
      * 
@@ -140,8 +99,8 @@ public class Game {
      */
     public void moveSongToFinal(Song currentSong) {
         Logger.getLogger(Game.class.getName()).log(Level.INFO, "Sposto {0} sulla finale.", currentSong.getFileName());
-        songs.remove(currentSong);
-        finalSongs.add(currentSong);
+        trackList.songListProperty().remove(currentSong);
+        trackList.finalSongsListProperty().add(currentSong);
     }
 
     /**
@@ -150,9 +109,7 @@ public class Game {
      */
     public void moveSongToGame(Song currentSong) {
         Logger.getLogger(Game.class.getName()).log(Level.INFO, "Sposto {0} sulla manche.", currentSong.getFileName());
-        finalSongs.remove(currentSong);
-        songs.add(currentSong);
+        trackList.finalSongsListProperty().remove(currentSong);
+        trackList.songListProperty().add(currentSong);
     }
-
-
 }

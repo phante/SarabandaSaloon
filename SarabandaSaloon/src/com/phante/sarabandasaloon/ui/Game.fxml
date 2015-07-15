@@ -96,8 +96,32 @@
                                 </Button>
                             </children>
                         </GridPane>
-                        <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSarabandaReset" text="Reset" />
-                        <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSarabandaFullReset" text="Reset Completo" />
+                  <Separator layoutX="15.0" layoutY="42.0" prefWidth="200.0" />
+                  <Accordion>
+                    <panes>
+                      <TitledPane animated="false" text="Comandi Sarabanda diretti">
+                        <content>
+                              <VBox spacing="10.0">
+                                 <children>
+                                          <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSarabandaReset" text="Reset" />
+                                          <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSarabandaFullReset" text="Reset Completo" />
+                                    <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSarabandaError" text="Errore" />
+                                 </children>
+                              </VBox>
+                        </content>
+                      </TitledPane>
+                      <TitledPane animated="false" text="Avanzate">
+                        <content>
+                              <VBox spacing="10.0">
+                                 <children>
+                                    <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSarabandaHWReset" text="Master Reset!!" />
+                                    <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSarabandaDemo" text="Demo" />
+                                 </children>
+                              </VBox>
+                        </content>
+                      </TitledPane>
+                    </panes>
+                  </Accordion>
                     </children>
                     <padding>
                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
@@ -159,7 +183,8 @@
                 <HBox fx:id="buttonPane" alignment="CENTER" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="100.0" spacing="10.0" BorderPane.alignment="CENTER">
                <BorderPane.margin>
                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-               </BorderPane.margin></HBox>
+               </BorderPane.margin>
+            </HBox>
             </top>
          <bottom>
             <GridPane alignment="CENTER" BorderPane.alignment="CENTER">

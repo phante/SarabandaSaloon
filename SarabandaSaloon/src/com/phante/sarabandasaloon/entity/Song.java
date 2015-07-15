@@ -34,21 +34,28 @@ import javafx.util.Duration;
  * @author deltedes
  */
 public class Song {
-
-    private final MediaPlayer player;
-
+    private final StringProperty id = new SimpleStringProperty();
     private final StringProperty fileName = new SimpleStringProperty();
     private final StringProperty title = new SimpleStringProperty();
     private final StringProperty artist = new SimpleStringProperty();
     private final StringProperty album = new SimpleStringProperty();
     private final StringProperty totalDuration = new SimpleStringProperty();
-    private Duration duration;
 
     private final BooleanProperty played = new SimpleBooleanProperty();
     private final BooleanProperty ok = new SimpleBooleanProperty();
     private final BooleanProperty ko = new SimpleBooleanProperty();
+    
+    private final MediaPlayer player;
+    private Duration duration;
 
-    public Song(String source) {
+    /**
+     * Costruttore di default
+     * 
+     * @param newId
+     * @param source 
+     */
+    public Song(String newId, String source) {
+        id.setValue(newId);
         fileName.setValue(source);
         played.setValue(false);
         ok.setValue(false);
@@ -87,6 +94,18 @@ public class Song {
 
     }
 
+    public StringProperty idProperty() {
+        return id;
+    }
+    
+    public String getId() {
+        return id.getValue();
+    }
+    
+    public void setId(String newId) {
+        id.set(newId);
+    }
+ 
     public StringProperty fileNameProperty() {
         return fileName;
     }
@@ -94,7 +113,11 @@ public class Song {
     public String getFileName() {
         return fileName.getValue();
     }
-
+    
+    public void setFileName(String newId) {
+        fileName.set(newId);
+    }
+    
     public StringProperty titleProperty() {
         return title;
     }
@@ -110,25 +133,21 @@ public class Song {
     public StringProperty totalDurationProperty() {
         return totalDuration;
     }
+    
+    public BooleanProperty playedProperty() {
+        return played;
+    }
+    
+    public BooleanProperty koProperty() {
+        return ko;
+    }
+
+    public BooleanProperty okProperty() {
+        return ok;
+    }
 
     public MediaPlayer getPlayer() {
         return player;
-    }
-
-    public String getTitle() {
-        return title.getValueSafe();
-    }
-
-    public String getArtist() {
-        return artist.getValueSafe();
-    }
-
-    public String getAlbum() {
-        return album.getValueSafe();
-    }
-
-    public String getTotalDuration() {
-        return totalDuration.getValueSafe();
     }
     
     public Duration getDuration() {
@@ -155,17 +174,4 @@ public class Song {
     public MediaPlayer.Status status() {
         return player.statusProperty().getValue();
     }
-    
-    public BooleanProperty playedProperty() {
-        return played;
-    }
-    
-    public BooleanProperty koProperty() {
-        return ko;
-    }
-
-    public BooleanProperty okProperty() {
-        return ok;
-    }
-
 }

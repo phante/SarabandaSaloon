@@ -149,11 +149,12 @@ public class GameController implements Initializable {
     private HBox buttonPane = new HBox();
     //private List<ButtonSimbol> buttonSimbols = new ArrayList();
 
-    // Gioco corrente
-    private Game currentGame = new Game();
-
+    // Gioco associato al controller
+    private Game game;
+    
     // Canzone corrente
-    private Song currentSong = null;
+    private Song currentSong;
+    
     // Listener per l'indicazione del progresso sulla canzone
     private ChangeListener<Duration> progressChangeListener;
 
@@ -165,17 +166,18 @@ public class GameController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Imposta lo stato iniziale dell'interfaccia per il gioco
-        resetGameInterface();
+        // Disabilita i pulsanti per la gestione delle risposte
+        enableGameValutationInterface(false);
 
-        // Imposta lo stato iniziale dei pulsanti del player disabilitata
+        // Disabilita le tabelle di scelta
+        songTable.setDisable(true);
+        finalSongTable.setDisable(true);
+
+        // Disabilita i pulsanti di scelta
         enablePlayerInterface(false);
 
-        // Imposta la gestione delle tabella delle canzoni della manche normale
-        songTableInit(currentGame.getSongs(), songTable);
-
         // Imposta le singole colonne
-        songIDColumn.setCellValueFactory(cellData -> currentGame.getSongIDProperty(cellData.getValue()));
+        songIDColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty());
         songTitleColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
         songAlbumColumn.setCellValueFactory(cellData -> cellData.getValue().albumProperty());
         songArtistColumn.setCellValueFactory(cellData -> cellData.getValue().artistProperty());
@@ -186,11 +188,8 @@ public class GameController implements Initializable {
         songKOColumn.setCellValueFactory(cellData -> cellData.getValue().koProperty());
         songKOColumn.setCellFactory((TableColumn<Song, Boolean> p) -> new CheckBoxTableCell<>());
 
-        // Imposta la tabella delle canzioni per la finale
-        songTableInit(currentGame.getFinalSongs(), finalSongTable);
-
         // Imposta le singole colonne
-        finalSongIDColumn.setCellValueFactory(cellData -> currentGame.getSongIDProperty(cellData.getValue()));
+        finalSongIDColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty());
         finalSongTitleColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
         finalSongAlbumColumn.setCellValueFactory(cellData -> cellData.getValue().albumProperty());
         finalSongArtistColumn.setCellValueFactory(cellData -> cellData.getValue().artistProperty());
@@ -201,7 +200,7 @@ public class GameController implements Initializable {
         finalSongKOColumn.setCellValueFactory(cellData -> cellData.getValue().koProperty());
         finalSongKOColumn.setCellFactory((TableColumn<Song, Boolean> p) -> new CheckBoxTableCell<>());
 
-        // Inizializza il pannello con lo sttao dei pushButton
+        // Inizializza il pannello con lo stato dei pushButton
         pushButtonStatusPaneInit();
 
         // Inizializza gli elementi della status bar
@@ -218,8 +217,27 @@ public class GameController implements Initializable {
                     listenerLabel.setText("");
             }
         });
-
     }
+    
+    /**
+     * Carica sul controller il game da gestire, quindi metre sull'inizialize è stato
+     * preimpostato l'aspetto grafico di base, qui andiamo a caricare e popolarlo
+     * con i dati del caso.
+     * 
+     * @param newGame 
+     */
+    public void setGame(Game newGame) {
+        game = newGame;
+        
+        // Imposta i dati della tabella delle canzoni della manche normale
+        songTableInit(game.getTrackList().songListProperty(), songTable);
+        songTable.setDisable(true);
+        
+        // Imposta la tabella delle canzioni per la finale
+        songTableInit(game.getTrackList().finalSongsListProperty(), finalSongTable);
+        finalSongTable.setDisable(true);        
+    }
+
 
     /**
      * Inizializza l'aspetto grafico per lo stato dei pulsanti
@@ -249,7 +267,7 @@ public class GameController implements Initializable {
                 simbol.setValue(PushButtonStatus.parse(newValue));
 
                 // Nel caso il gioco sia in corso verifica se il pulsante è stato premuto
-                if (currentGame.runningProperty().getValue() && (PushButtonStatus.parse(newValue) == PushButtonStatus.PRESSED)) {
+                if (game.runningProperty().getValue() && (PushButtonStatus.parse(newValue) == PushButtonStatus.PRESSED)) {
                     //Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Un pushButton è stato premuto");
                     pushButtonPressed();
                 }
@@ -280,9 +298,9 @@ public class GameController implements Initializable {
                 String lowerCaseFilter = newValue.toLowerCase();
                 boolean found = false;
                 // Verifica che l'id contenga il testo
-                found = found || currentGame.getSongID(song).toLowerCase().contains(lowerCaseFilter);
+                found = found || song.getId().toLowerCase().contains(lowerCaseFilter);
                 // Verifica che il titolo contenga il testo
-                found = found || song.getTitle().toLowerCase().contains(lowerCaseFilter);
+                found = found || song.titleProperty().getValue().toLowerCase().contains(lowerCaseFilter);
                 return found;
             });
         });
@@ -372,10 +390,10 @@ public class GameController implements Initializable {
             handleTimer();
 
             // Imposta le etichette con i metadati
-            currentTitle.setText(currentSong.getTitle());
-            currentAlbum.setText(currentSong.getArtist());
-            currentArtist.setText(currentSong.getAlbum());
-            currentTotalDuration.setText(currentSong.getTotalDuration());
+            currentTitle.setText(currentSong.titleProperty().getValue());
+            currentAlbum.setText(currentSong.artistProperty().getValue());
+            currentArtist.setText(currentSong.albumProperty().getValue());
+            currentTotalDuration.setText(currentSong.getDuration().toString());
 
             // Imposta il listener per le progressbar e il segnatempo
             progressChangeListener = (observableValue, oldValue, newValue) -> {
@@ -460,7 +478,7 @@ public class GameController implements Initializable {
      */
     public void startGame() {
         Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Inizio il gioco");
-        currentGame.start();
+        game.start();
 
         // Disabilita la scelta della canzone
         songTable.setDisable(true);
@@ -522,7 +540,7 @@ public class GameController implements Initializable {
         // TODO Esegue suono di vittoria
         
         // Chiude la canzone corrente e resetta l'interfaccia
-        currentGame.stop();
+        game.stop();
         resetGameInterface();
     }
 
@@ -552,7 +570,7 @@ public class GameController implements Initializable {
 
         // Gioco concluso in errore chiude il gioco e resetta l'inrefaccia
         if (allInError) {
-            currentGame.stop();
+            game.stop();
             resetGameInterface();
         }
     }
@@ -572,7 +590,7 @@ public class GameController implements Initializable {
         // TODO Esegue il suono dell'errore finale
         
         // Chiude il gioco e resetta l'interfaccia
-        currentGame.stop();
+        game.stop();
         resetGameInterface();
     }
 
@@ -621,16 +639,16 @@ public class GameController implements Initializable {
     private Duration getTimerValue() {
         return Duration.seconds(Double.parseDouble(timerValue.textProperty().getValue()));
     }
-
+    
     /**
      * Carica la lista delle canzoni
      *
      * @param path
      */
-    public void loadGameSong(String path) {
-        Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Carico la lista delle canzoni");
-        currentGame.loadMediaListFromDirectory(path);
-    }
+    /*public void loadGameSong(String path) {
+    Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Carico la lista delle canzoni");
+    currentGame.loadMediaListFromDirectory(path);
+    }*/
 
     /**
      * gestisce il pulsante play
@@ -641,7 +659,7 @@ public class GameController implements Initializable {
             if ("Pause".equals(playButton.getText())) {
                 currentSong.pause();
             } else {
-                if (currentGame.isRunning()) {
+                if (game.isRunning()) {
                     continueGame();
                 } else {
                     startGame();
@@ -699,14 +717,29 @@ public class GameController implements Initializable {
     public void handleSarabandaFullReset() {
         SarabandaSlaveController.getInstance().sendSarabandaFullReset();
     }
+    
+    @FXML
+    public void handleSarabandaError() {
+        SarabandaSlaveController.getInstance().sendSarabandaError();
+    }
+
+    @FXML
+    public void handleSarabandaDemo() {
+        SarabandaSlaveController.getInstance().sendSarabandaDemo();
+    }
+    
+    @FXML
+    public void handleSarabandaHWReset() {
+        SarabandaSlaveController.getInstance().sendSarabandaMasterPhysicalReset();
+    }
 
     @FXML
     public void handleMoveToFinalSongList() {
-        currentGame.moveSongToFinal(currentSong);
+        //currentGame.moveSongToFinal(currentSong);
     }
 
     @FXML
     public void handleMoveToSongList() {
-        currentGame.moveSongToGame(currentSong);
+        //currentGame.moveSongToGame(currentSong);
     }
 }

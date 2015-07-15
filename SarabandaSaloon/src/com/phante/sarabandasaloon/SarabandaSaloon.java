@@ -15,8 +15,10 @@
  */
 package com.phante.sarabandasaloon;
 
+import com.phante.sarabandasaloon.entity.TrackList;
 import com.phante.sarabandasaloon.network.SarabandaSlaveController;
 import com.phante.sarabandasaloon.ui.RootController;
+import java.io.File;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 
@@ -24,6 +26,8 @@ import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 
 import javafx.stage.Stage;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
 
 /**
  *
@@ -56,5 +60,4 @@ public class SarabandaSaloon extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-
 }
