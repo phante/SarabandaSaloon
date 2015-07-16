@@ -29,6 +29,7 @@ import java.util.prefs.Preferences;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.Pane;
@@ -44,13 +45,12 @@ import javax.xml.bind.Marshaller;
  */
 public class RootController implements Initializable {
 
+    private File configPath;
+    //private Stage primaryStage;
+    
     @FXML
     private TabPane tabPane;
 
-    private GameController gameController;
-    private NetworkController networkController;
-
-    private Stage primaryStage;
 
     /**
      * Initializes the controller class.
@@ -61,21 +61,39 @@ public class RootController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         try {
-            FXMLLoader gameLoader = new FXMLLoader(getClass().getResource("Game.fxml"));
+            // Prima di inizializzare la finestra principale verifica se esiste un path con la configurazione
+            configPath = checkDefaultDirectoryPath();
+        
+            // Carico il controller delle tracklist
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("TrackList.fxml"));
+            Pane trackListPane = loader.load();
+            ((TrackListController) loader.getController()).setConfigPath(configPath);
+            
+            // Aggiunge la gestione delle tracklist alla schermata principale
+            Tab trackListTab = new Tab();
+            trackListTab.setContent(trackListPane);
+            trackListTab.setText("Gestione TrackList");
+            tabPane.getTabs().add(trackListTab);
+            
+
+
+            
+            
+            /*FXMLLoader gameLoader = new FXMLLoader(getClass().getResource("Game.fxml"));
             Pane gamePage = gameLoader.load();
             gameController = (GameController) gameLoader.getController();
-
+            
             Tab gameTab = new Tab();
             gameTab.setContent(gamePage);
             gameTab.setText("Game");
-
+            
             TrackList tl = new TrackList("Nuova tracklist");
             String source = getDefaultDirectoryFilePath().getAbsolutePath();
             tl.loadMediaListFromDirectory(source);
-            saveTrackListDataToFile(tl);
+            saveTrackListDataToFile(tl);*/
 
             //tl.loadMediaListFromDirectory("/Users/elvisdeltedesco/Music/iTunes/iTunes Music/Music/AC_DC/Black Ice");
-            gameController.setGame(new Game(tl));
+            //gameController.setGame(new Game(tl));
 
             /*
              FXMLLoader contentLoader = new FXMLLoader(getClass().getResource("Network.fxml"));
@@ -86,48 +104,62 @@ public class RootController implements Initializable {
              documentTab.setContent(documentPage);
              documentTab.setText("Document");
              */
-            tabPane.getTabs().setAll(gameTab);
+            //tabPane.getTabs().setAll(gameTab);
 
             // Avvia il server
             SarabandaSlaveController.getInstance().startServer();
-
         } catch (IOException ex) {
             Logger.getLogger(RootController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+        /**
+     * Verifica se nella configurazione del sistema è già presente un path
+     *
+     * @return
+     */
+    private File checkDefaultDirectoryPath() {
+        // Carica il path dalle impostazioni
+        Preferences prefs = Preferences.userNodeForPackage(SarabandaSaloon.class);
+        String filePath = prefs.get("SarabandaPath", null);
+        
+        Logger.getLogger(RootController.class.getName()).log(Level.INFO, "Il path di default della configurazione è {0}", filePath);
+        
+        File path;
+        if (filePath == null) {
+            configPath = newDefaultDirectoryPathDialog();
+        } else {
+            configPath = new File(filePath);
+        }
+
+        while (!configPath.exists()) {
+            // Alert per path non esistente
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Errore");
+            alert.setHeaderText("Errore nel caricamenteo del path");
+            alert.setContentText("Il path indicato non esiste.");
+            alert.showAndWait();
+
+            // Se il path indicato non esiste
+            configPath = newDefaultDirectoryPathDialog();
+        }
+        
+        if (!configPath.getPath().equals(filePath)) {
+            Logger.getLogger(RootController.class.getName()).log(Level.INFO, "Salvo {0} nelle impostazioni di default", configPath.getPath());
+            prefs.put("SarabandaPath", configPath.getPath());
+        }
+
+        return configPath;
+    }
 
     /**
-     * Richiede il path per il caricamento delle traccie audio
+     *
+     * @return
      */
-    @FXML
-    public void getSongPath() throws IOException {
+    private File newDefaultDirectoryPathDialog() {
         DirectoryChooser dirChooser = new DirectoryChooser();
-        File directory = dirChooser.showDialog(primaryStage);
-
-        setDefaultDirectoryFilePath(directory);
-
-        FXMLLoader gameLoader = new FXMLLoader(getClass().getResource("Game.fxml"));
-        Pane gamePage = gameLoader.load();
-        gameController = (GameController) gameLoader.getController();
-        Tab gameTab = new Tab();
-        gameTab.setContent(gamePage);
-        gameTab.setText("Game");
-
-        TrackList tl = new TrackList("caricata fresca fresca");
-        String source = getDefaultDirectoryFilePath().getAbsolutePath();
-        tl.loadMediaListFromDirectory(source);
-        saveTrackListDataToFile(tl);
-
-        //tl.loadMediaListFromDirectory("/Users/elvisdeltedesco/Music/iTunes/iTunes Music/Music/AC_DC/Black Ice");
-        gameController.setGame(new Game(tl));
-        
-        tabPane.getTabs().add(gameTab);
-
-        /*
-         TrackList tl = new TrackList();
-         tl.loadMediaListFromDirectory("D:\\mp3");
-         gameController.loadGameSong(directory.getPath());
-         */
+        dirChooser.setTitle("Seleziona la directory di configurazione del Sarabanda");
+        return dirChooser.showDialog(null);
     }
 
     /**
@@ -135,64 +167,37 @@ public class RootController implements Initializable {
      *
      * @param file
      */
-    public void saveTrackListDataToFile(TrackList tl) {
-        Logger.getLogger(RootController.class.getName()).log(Level.INFO, "Provo a salvare il file su disco");
-        File file = new File("D://trackList.xml");
-
-        try {
-            JAXBContext context = JAXBContext.newInstance(TrackList.class);
-            Marshaller m = context.createMarshaller();
-            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-
-            // Marshalling and saving XML to the file.
-            m.marshal(tl, file);
-        } catch (Exception e) { // catches ANY exception
-            Logger.getLogger(RootController.class.getName()).log(Level.SEVERE, null, e);
-        }
+    /*public void saveTrackListDataToFile(TrackList tl) {
+    Logger.getLogger(RootController.class.getName()).log(Level.INFO, "Provo a salvare il file su disco");
+    File file = new File("D://trackList.xml");
+    
+    try {
+    JAXBContext context = JAXBContext.newInstance(TrackList.class);
+    Marshaller m = context.createMarshaller();
+    m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+    
+    // Marshalling and saving XML to the file.
+    m.marshal(tl, file);
+    } catch (Exception e) { // catches ANY exception
+    Logger.getLogger(RootController.class.getName()).log(Level.SEVERE, null, e);
     }
+    }*/
 
-    public File getDefaultDirectoryFilePath() {
-        Preferences prefs = Preferences.userNodeForPackage(SarabandaSaloon.class);
-        String filePath = prefs.get("filePath", null);
-
-        Logger.getLogger(RootController.class.getName()).log(Level.INFO, filePath);
-        if (filePath != null) {
-            return new File(filePath);
-        } else {
-            return null;
-        }
-    }
-
-    public void setDefaultDirectoryFilePath(File file) {
-        Preferences prefs = Preferences.userNodeForPackage(SarabandaSaloon.class);
-        if (file != null) {
-            prefs.put("filePath", file.getPath());
-
-            // Update the stage title.
-            primaryStage.setTitle("AddressApp - " + file.getName());
-        } else {
-            prefs.remove("filePath");
-
-            // Update the stage title.
-            primaryStage.setTitle("AddressApp");
-        }
-    }
-
-    @FXML
+    /* @FXML
     public void handleErrorMenu() {
-        gameController.errorGame();
-    }
+    gameController.errorGame();
+    }*/
 
-    @FXML
+    /*@FXML
     public void handleCorrectMenu() {
-        gameController.goodGame();
-    }
+    gameController.goodGame();
+    }*/
 
     /**
      *
      * @param stage
      */
-    public void setStage(Stage stage) {
-        this.primaryStage = stage;
-    }
+    /*public void setStage(Stage stage) {
+    this.primaryStage = stage;
+    }*/
 }

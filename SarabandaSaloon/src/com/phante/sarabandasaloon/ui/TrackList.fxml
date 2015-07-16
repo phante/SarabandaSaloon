@@ -1,34 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import java.lang.*?>
 <?import java.util.*?>
 <?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-
-<StackPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.phante.sarabandasaloon.ui.TrackListController">
-   <children>
-      <HBox>
+<BorderPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.phante.sarabandasaloon.ui.TrackListController">
+   <left>
+      <StackPane BorderPane.alignment="CENTER">
          <children>
-            <ListView prefHeight="200.0" prefWidth="200.0" />
-            <VBox prefHeight="200.0" prefWidth="100.0">
-               <children>
-                  <TableView prefHeight="200.0" prefWidth="200.0">
-                    <columns>
-                      <TableColumn prefWidth="75.0" text="C1" />
-                      <TableColumn prefWidth="75.0" text="C2" />
-                    </columns>
-                  </TableView>
-                  <TableView prefHeight="200.0" prefWidth="465.0">
-                    <columns>
-                      <TableColumn prefWidth="75.0" text="C1" />
-                      <TableColumn prefWidth="75.0" text="C2" />
-                    </columns>
-                  </TableView>
-               </children>
-            </VBox>
+            <TableView fx:id="trackListTable" prefHeight="200.0" prefWidth="200.0">
+              <columns>
+                <TableColumn fx:id="trackListNameColumn" maxWidth="1.7976931348623157E308" minWidth="-1.0" prefWidth="200.0" text="Nome" />
+              </columns>
+            </TableView>
          </children>
-      </HBox>
-   </children>
-</StackPane>
+         <BorderPane.margin>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </BorderPane.margin>
+      </StackPane>
+   </left>
+   <center>
+      <VBox spacing="5.0" BorderPane.alignment="CENTER">
+         <BorderPane.margin>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </BorderPane.margin>
+         <children>
+            <HBox spacing="5.0">
+               <children>
+                  <Button mnemonicParsing="false" text="Aggiungi file/directory" />
+                  <Button alignment="CENTER_RIGHT" mnemonicParsing="false" text="Crea gioco" />
+               </children>
+            </HBox>
+            <TableView prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+              <columns>
+                <TableColumn prefWidth="75.0" text="C1" />
+              </columns>
+            </TableView>
+         </children>
+      </VBox>
+   </center>
+</BorderPane>

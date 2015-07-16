@@ -15,19 +15,22 @@
  */
 package com.phante.sarabandasaloon;
 
-import com.phante.sarabandasaloon.entity.TrackList;
 import com.phante.sarabandasaloon.network.SarabandaSlaveController;
 import com.phante.sarabandasaloon.ui.RootController;
 import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.prefs.Preferences;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.Pane;
+import javafx.stage.DirectoryChooser;
 
 import javafx.stage.Stage;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
 
 /**
  *
@@ -35,19 +38,23 @@ import javax.xml.bind.Marshaller;
  */
 public class SarabandaSaloon extends Application {
 
+    private Stage primaryStage;
+
     @Override
     public void start(Stage primaryStage) throws Exception {
+        this.primaryStage = primaryStage;
+
         // Inizializza la finestra principale
         FXMLLoader rootloader = new FXMLLoader(getClass().getResource("ui/Root.fxml"));
         Pane rootLayout = rootloader.load();
-        ((RootController)rootloader.getController()).setStage(primaryStage);
-        
+        //((RootController) rootloader.getController()).setStage(primaryStage);
+
         // Inizializza il controller del Sarabanda
         SarabandaSlaveController sarabanda = SarabandaSlaveController.getInstance();
 
         Scene scene = new Scene(rootLayout);
-        
-        primaryStage.setTitle("Sarabanda Saloon");        
+
+        primaryStage.setTitle("Sarabanda Saloon");
         primaryStage.setScene(scene);
         primaryStage.setMinHeight(600);
         primaryStage.setMinWidth(800);

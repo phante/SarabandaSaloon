@@ -14,40 +14,6 @@
          <children>
             <MenuBar>
               <menus>
-                <Menu mnemonicParsing="false" text="File">
-                  <items>
-                    <MenuItem mnemonicParsing="false" onAction="#getSongPath" text="Load ...">
-                           <accelerator>
-                              <KeyCodeCombination alt="ANY" code="L" control="UP" meta="UP" shift="UP" shortcut="UP" />
-                           </accelerator></MenuItem>
-                  </items>
-                     <accelerator>
-                        <KeyCodeCombination alt="ANY" code="F" control="UP" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator>
-                </Menu>
-                <Menu mnemonicParsing="false" text="Game">
-                  <items>
-                    <MenuItem mnemonicParsing="false" onAction="#handleErrorMenu" text="Errore">
-                           <accelerator>
-                              <KeyCodeCombination alt="ANY" code="E" control="UP" meta="UP" shift="UP" shortcut="UP" />
-                           </accelerator></MenuItem>
-                        <MenuItem mnemonicParsing="false" onAction="#handleCorrectMenu" text="Corretto">
-                           <accelerator>
-                              <KeyCodeCombination alt="ANY" code="C" control="UP" meta="UP" shift="UP" shortcut="UP" />
-                           </accelerator></MenuItem>
-                        <MenuItem mnemonicParsing="false" text="Reset">
-                           <accelerator>
-                              <KeyCodeCombination alt="ANY" code="R" control="UP" meta="UP" shift="UP" shortcut="UP" />
-                           </accelerator></MenuItem>
-                        <MenuItem mnemonicParsing="false" text="Full Reset">
-                           <accelerator>
-                              <KeyCodeCombination alt="ANY" code="U" control="UP" meta="UP" shift="UP" shortcut="UP" />
-                           </accelerator></MenuItem>
-                  </items>
-                     <accelerator>
-                        <KeyCodeCombination alt="ANY" code="G" control="UP" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator>
-                </Menu>
                 <Menu mnemonicParsing="false" text="Help">
                   <items>
                     <MenuItem mnemonicParsing="false" text="About">
@@ -61,12 +27,7 @@
                 </Menu>
               </menus>
             </MenuBar>
-            <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
-                <tabs>
-                    <Tab closable="false" text="Game" />
-                    <Tab closable="false" text="Network" />
-                </tabs>
-            </TabPane>
+            <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS" />
          </children>
       </VBox>
    </children>
