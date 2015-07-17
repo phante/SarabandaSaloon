@@ -162,27 +162,6 @@ public class RootController implements Initializable {
         return dirChooser.showDialog(null);
     }
 
-    /**
-     * Saves the current person data to the specified file.
-     *
-     * @param file
-     */
-    /*public void saveTrackListDataToFile(TrackList tl) {
-    Logger.getLogger(RootController.class.getName()).log(Level.INFO, "Provo a salvare il file su disco");
-    File file = new File("D://trackList.xml");
-    
-    try {
-    JAXBContext context = JAXBContext.newInstance(TrackList.class);
-    Marshaller m = context.createMarshaller();
-    m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-    
-    // Marshalling and saving XML to the file.
-    m.marshal(tl, file);
-    } catch (Exception e) { // catches ANY exception
-    Logger.getLogger(RootController.class.getName()).log(Level.SEVERE, null, e);
-    }
-    }*/
-
     /* @FXML
     public void handleErrorMenu() {
     gameController.errorGame();
@@ -191,13 +170,5 @@ public class RootController implements Initializable {
     /*@FXML
     public void handleCorrectMenu() {
     gameController.goodGame();
-    }*/
-
-    /**
-     *
-     * @param stage
-     */
-    /*public void setStage(Stage stage) {
-    this.primaryStage = stage;
     }*/
 }

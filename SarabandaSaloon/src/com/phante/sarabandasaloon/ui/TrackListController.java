@@ -16,6 +16,7 @@
 package com.phante.sarabandasaloon.ui;
 
 import com.phante.sarabandasaloon.entity.Game;
+import com.phante.sarabandasaloon.entity.Song;
 import com.phante.sarabandasaloon.entity.TrackList;
 import com.phante.sarabandasaloon.entity.TrackListWrapper;
 import java.io.File;
@@ -35,10 +36,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
+import javafx.scene.control.cell.CheckBoxTableCell;
 
 /**
  * FXML Controller class
@@ -53,6 +51,11 @@ public class TrackListController implements Initializable {
     private TableView<TrackListWrapper> trackListTable = new TableView();
     @FXML
     private TableColumn<TrackListWrapper, String> trackListNameColumn = new TableColumn();
+    
+    // Tabella con la lista delle canzoni
+    @FXML
+    private TableView<Song> songTable = new SongTableView();
+
 
     // Path della configurazione delle tracklist
     private File configPath = null;
@@ -95,8 +98,10 @@ public class TrackListController implements Initializable {
     private void loadTrackListData(TrackListWrapper tlw) {
         // Sposto il caricamento su un thread a parte per non bloccare l'interfaccia
         Platform.runLater(() -> {
-            // Carica la tracklist vera
+            // Carica la tracklist completa
             activeTrackList = tlw.getTrackList();
+            
+            songTable.setItems(activeTrackList.songListProperty());
         });
     }
 
@@ -106,34 +111,28 @@ public class TrackListController implements Initializable {
      */
     public void setConfigPath(File path) {
         Platform.runLater(() -> {
-            try {
-                trackListArray.clear();
-                configPath = new File(path.getPath() + DIRECTORY);
 
-                // Creo la directory se non esiste
-                if (!configPath.exists()) {
-                    configPath.mkdir();
-                }
+            trackListArray.clear();
+            configPath = new File(path.getPath() + DIRECTORY);
 
-                // Popolo la lista delle tracklist
-                JAXBContext context = JAXBContext.newInstance(TrackListWrapper.class);
-                Unmarshaller um = context.createUnmarshaller();
-
-                try (DirectoryStream<Path> stream = Files.newDirectoryStream(configPath.toPath(), "*.xml")) {
-                    for (Path entry : stream) {
-                        TrackListWrapper trackListWrapper = (TrackListWrapper) um.unmarshal(entry.toFile());
-                        trackListWrapper.setFile(entry.toFile());
-
-                        Logger.getLogger(TrackListController.class.getName()).log(Level.INFO, "Caricata la tracklist {0} dal file {1}", new Object[]{trackListWrapper.getName(), trackListWrapper.getFile().getPath()});
-
-                        trackListArray.add(trackListWrapper);
-                    }
-                } catch (IOException ex) {
-                    Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            } catch (JAXBException ex) {
-                Logger.getLogger(TrackListController.class.getName()).log(Level.SEVERE, null, ex);
+            // Creo la directory se non esiste
+            if (!configPath.exists()) {
+                configPath.mkdir();
             }
+
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(configPath.toPath(), "*.xml")) {
+                for (Path entry : stream) {
+                    TrackListWrapper trackListWrapper = TrackListWrapper.loadTrackListWrapperFromFile(entry.toFile());
+
+                    Logger.getLogger(TrackListController.class.getName()).log(Level.INFO, "Caricata la tracklist {0} dal file {1}", new Object[]{trackListWrapper.getName(), trackListWrapper.getFile().getPath()});
+
+                    trackListArray.add(trackListWrapper);
+
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
         });
     }
 }

@@ -37,10 +37,25 @@ public class TrackListWrapper {
 
     private File file;
     private StringProperty name = new SimpleStringProperty();
-    
-    public TrackListWrapper() {
+
+    private TrackListWrapper() {
         file = null;
         name.setValue(null);
+    }
+
+    public static TrackListWrapper loadTrackListWrapperFromFile(File file) {
+        TrackListWrapper trackListWrapper = new TrackListWrapper();
+        try {
+            JAXBContext context = JAXBContext.newInstance(TrackListWrapper.class);
+            Unmarshaller um = context.createUnmarshaller();
+            
+            trackListWrapper = (TrackListWrapper) um.unmarshal(file);
+            trackListWrapper.setFile(file);
+        } catch (JAXBException ex) {
+            Logger.getLogger(TrackListWrapper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return trackListWrapper;
     }
 
     public TrackList getTrackList() {
@@ -54,7 +69,7 @@ public class TrackListWrapper {
         }
         return null;
     }
-    
+
     public void saveTrackList(TrackList trackList) {
         try {
             JAXBContext context = JAXBContext.newInstance(TrackList.class);
@@ -68,15 +83,19 @@ public class TrackListWrapper {
         }
     }
 
+    public StringProperty nameProperty() {
+        return name;
+    }
+
     public void setName(String newName) {
         name.setValue(newName);
     }
-    
+
     public String getName() {
         return name.getValue();
     }
 
-    public void setFile(File newFile) {
+    private void setFile(File newFile) {
         file = newFile;
     }
 
@@ -84,7 +103,4 @@ public class TrackListWrapper {
         return file;
     }
 
-    public StringProperty nameProperty() {
-        return name;
-    }
 }
