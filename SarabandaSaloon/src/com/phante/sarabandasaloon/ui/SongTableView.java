@@ -16,6 +16,9 @@
 package com.phante.sarabandasaloon.ui;
 
 import com.phante.sarabandasaloon.entity.Song;
+import com.phante.sarabandasaloon.entity.TrackList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -43,6 +46,7 @@ public class SongTableView extends TableView<Song> {
 
     public SongTableView() {
         super();
+        Logger.getLogger(SongTableView.class.getName()).log(Level.INFO, "Inizializzo la SongTableView");
 
         this.getColumns().clear();
 

@@ -15,9 +15,7 @@
  */
 package com.phante.sarabandasaloon.ui;
 
-import com.phante.sarabandasaloon.SarabandaSaloon;
-import com.phante.sarabandasaloon.entity.Game;
-import com.phante.sarabandasaloon.entity.TrackList;
+import com.phante.sarabandasaloon.entity.PreferencesUtility;
 import com.phante.sarabandasaloon.network.SarabandaSlaveController;
 import java.io.File;
 import java.io.IOException;
@@ -25,18 +23,18 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.prefs.Preferences;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
 
 /**
  * FXML Controller class
@@ -45,8 +43,8 @@ import javax.xml.bind.Marshaller;
  */
 public class RootController implements Initializable {
 
-    private File configPath;
-    //private Stage primaryStage;
+    //private File configPath;
+    private Stage primaryStage;
     
     @FXML
     private TabPane tabPane;
@@ -62,12 +60,12 @@ public class RootController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         try {
             // Prima di inizializzare la finestra principale verifica se esiste un path con la configurazione
-            configPath = checkDefaultDirectoryPath();
+            checkDefaultDirectoryPath();
         
             // Carico il controller delle tracklist
             FXMLLoader loader = new FXMLLoader(getClass().getResource("TrackList.fxml"));
             Pane trackListPane = loader.load();
-            ((TrackListController) loader.getController()).setConfigPath(configPath);
+            //((TrackListController) loader.getController()).setConfigPath(configPath);
             
             // Aggiunge la gestione delle tracklist alla schermata principale
             Tab trackListTab = new Tab();
@@ -113,15 +111,15 @@ public class RootController implements Initializable {
         }
     }
     
-        /**
+    /**
      * Verifica se nella configurazione del sistema è già presente un path
      *
      * @return
      */
     private File checkDefaultDirectoryPath() {
         // Carica il path dalle impostazioni
-        Preferences prefs = Preferences.userNodeForPackage(SarabandaSaloon.class);
-        String filePath = prefs.get("SarabandaPath", null);
+        String filePath = PreferencesUtility.get(PreferencesUtility.BASE_PATH);
+        File configPath;
         
         Logger.getLogger(RootController.class.getName()).log(Level.INFO, "Il path di default della configurazione è {0}", filePath);
         
@@ -146,7 +144,7 @@ public class RootController implements Initializable {
         
         if (!configPath.getPath().equals(filePath)) {
             Logger.getLogger(RootController.class.getName()).log(Level.INFO, "Salvo {0} nelle impostazioni di default", configPath.getPath());
-            prefs.put("SarabandaPath", configPath.getPath());
+            PreferencesUtility.set(PreferencesUtility.BASE_PATH, configPath.getPath());
         }
 
         return configPath;
@@ -160,6 +158,38 @@ public class RootController implements Initializable {
         DirectoryChooser dirChooser = new DirectoryChooser();
         dirChooser.setTitle("Seleziona la directory di configurazione del Sarabanda");
         return dirChooser.showDialog(null);
+    }
+    
+    @FXML
+    private void handleConfig () throws IOException {
+        // Carico il controller delle tracklist
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("Configuration.fxml"));
+        DialogPane configPane = (DialogPane)loader.load();
+        
+        // Create the dialog Stage.
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Modifica le impostazioni");
+        dialogStage.initModality(Modality.WINDOW_MODAL);
+        dialogStage.initOwner(primaryStage);        
+
+        Scene scene = new Scene(configPane);
+        dialogStage.setScene(scene);
+        
+        // Set the person into the controller.
+        ConfigurationController controller = loader.getController();
+        controller.setDialogStage(dialogStage);
+        //controller.setPerson(person);
+
+        // Show the dialog and wait until the user closes it
+        dialogStage.showAndWait();
+    }
+    
+    /**
+     * 
+     * @param stage 
+     */
+    public void setStage(Stage stage) {
+        primaryStage = stage;
     }
 
     /* @FXML

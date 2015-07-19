@@ -39,8 +39,13 @@ public class TrackListWrapper {
     private StringProperty name = new SimpleStringProperty();
 
     private TrackListWrapper() {
-        file = null;
-        name.setValue(null);
+        this.file = null;
+        this.name.setValue(null);
+    }
+    
+    public TrackListWrapper(TrackList trackList, File file) {
+        this.file = file;
+        this.name = trackList.nameProperty();
     }
 
     public static TrackListWrapper loadTrackListWrapperFromFile(File file) {
@@ -56,31 +61,6 @@ public class TrackListWrapper {
         }
         
         return trackListWrapper;
-    }
-
-    public TrackList getTrackList() {
-        try {
-            // Estraggo la tracklist
-            JAXBContext context = JAXBContext.newInstance(TrackList.class);
-            Unmarshaller um = context.createUnmarshaller();
-            return (TrackList) um.unmarshal(file);
-        } catch (JAXBException ex) {
-            Logger.getLogger(TrackListController.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
-    }
-
-    public void saveTrackList(TrackList trackList) {
-        try {
-            JAXBContext context = JAXBContext.newInstance(TrackList.class);
-            Marshaller m = context.createMarshaller();
-            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-
-            // Marshalling and saving XML to the file.
-            m.marshal(trackList, file);
-        } catch (Exception e) { // catches ANY exception
-            Logger.getLogger(RootController.class.getName()).log(Level.SEVERE, null, e);
-        }
     }
 
     public StringProperty nameProperty() {

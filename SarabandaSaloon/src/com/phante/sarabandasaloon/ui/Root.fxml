@@ -16,10 +16,12 @@
               <menus>
                 <Menu mnemonicParsing="false" text="Help">
                   <items>
-                    <MenuItem mnemonicParsing="false" text="About">
+                        <MenuItem mnemonicParsing="false" onAction="#handleConfig" text="Configura" />
+                        <MenuItem mnemonicParsing="false" text="About">
                            <accelerator>
                               <KeyCodeCombination alt="ANY" code="A" control="UP" meta="UP" shift="UP" shortcut="UP" />
-                           </accelerator></MenuItem>
+                           </accelerator>
+                        </MenuItem>
                   </items>
                      <accelerator>
                         <KeyCodeCombination alt="ANY" code="H" control="UP" meta="UP" shift="UP" shortcut="UP" />

@@ -16,6 +16,7 @@
 package com.phante.sarabandasaloon.ui;
 
 import com.phante.sarabandasaloon.entity.Game;
+import com.phante.sarabandasaloon.entity.PreferencesUtility;
 import com.phante.sarabandasaloon.entity.Song;
 import com.phante.sarabandasaloon.entity.TrackList;
 import com.phante.sarabandasaloon.entity.TrackListWrapper;
@@ -25,6 +26,7 @@ import java.net.URL;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,10 +35,12 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.control.TextInputDialog;
+import javafx.stage.DirectoryChooser;
 
 /**
  * FXML Controller class
@@ -45,17 +49,17 @@ import javafx.scene.control.cell.CheckBoxTableCell;
  */
 public class TrackListController implements Initializable {
 
-    private static final String DIRECTORY = "\\tracklist\\";
-
     @FXML
     private TableView<TrackListWrapper> trackListTable = new TableView();
     @FXML
     private TableColumn<TrackListWrapper, String> trackListNameColumn = new TableColumn();
-    
+
     // Tabella con la lista delle canzoni
     @FXML
-    private TableView<Song> songTable = new SongTableView();
-
+    private TableView<Song> songTable;
+    
+    @FXML
+    private Button chooseSong = new Button();
 
     // Path della configurazione delle tracklist
     private File configPath = null;
@@ -74,6 +78,8 @@ public class TrackListController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        songTable = new SongTableView();
+                
         // Imposta i dati per la colonna dei nomi delle tracklist
         trackListNameColumn.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
 
@@ -82,9 +88,13 @@ public class TrackListController implements Initializable {
         // Imposta il listener per identificare il click sulla tabella
         trackListTable.getSelectionModel().selectedItemProperty().addListener(
                 (observedValue, oldValue, newValue) -> {
+                    chooseSong.setDisable(false);
                     loadTrackListData(newValue);
                 }
         );
+
+        // Carica le tracklist esistenti da file system
+        loadTraklistFromConfiguration();
 
         // Aggiunge la sorgente dati alla tabella
         trackListTable.setItems(trackListArray);
@@ -99,21 +109,20 @@ public class TrackListController implements Initializable {
         // Sposto il caricamento su un thread a parte per non bloccare l'interfaccia
         Platform.runLater(() -> {
             // Carica la tracklist completa
-            activeTrackList = tlw.getTrackList();
-            
+            activeTrackList = TrackList.getTrackList(tlw.getFile());
+
             songTable.setItems(activeTrackList.songListProperty());
         });
     }
 
     /**
      *
-     * @param path
      */
-    public void setConfigPath(File path) {
+    public void loadTraklistFromConfiguration() {
         Platform.runLater(() -> {
 
             trackListArray.clear();
-            configPath = new File(path.getPath() + DIRECTORY);
+            configPath = new File(PreferencesUtility.get(PreferencesUtility.BASE_PATH) + PreferencesUtility.TRACKLIST_DIRECTORY);
 
             // Creo la directory se non esiste
             if (!configPath.exists()) {
@@ -134,5 +143,39 @@ public class TrackListController implements Initializable {
             }
 
         });
+    }
+
+    /**
+     * Crea una nuova tracklist da zero
+     *
+     */
+    @FXML
+    public void createNewTrackList() {
+        TextInputDialog dialog = new TextInputDialog("Nuova tracklist");
+        dialog.setTitle("Crea nuova tracklist");
+        dialog.setHeaderText("Definisci il nome della nuova tracklist");
+        dialog.setContentText("Nome: ");
+
+        // The Java 8 way to get the response value (with lambda expression).
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()) {
+            TrackList trackList = new TrackList(result.get());
+            File newFile = new File(configPath.getPath() + "//" + trackList.getName() + ".xml");
+            trackList.saveTrackList(newFile);
+
+            trackListArray.add(new TrackListWrapper(trackList, newFile));
+        }
+    }
+
+    public void addSongFile() {
+        if (activeTrackList != null) {
+            DirectoryChooser dirChooser = new DirectoryChooser();
+            dirChooser.setTitle("Seleziona la directory con le canzoni da caricare");
+            File path = dirChooser.showDialog(null);
+            activeTrackList.addMediaListFromDirectory(path);
+            
+            songTable.setItems(activeTrackList.songListProperty());
+        }
+
     }
 }

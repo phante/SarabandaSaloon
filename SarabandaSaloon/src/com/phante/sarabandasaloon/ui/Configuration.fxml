@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.image.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<DialogPane prefHeight="84.0" prefWidth="426.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.phante.sarabandasaloon.ui.ConfigurationController">
+   <content>
+      <AnchorPane id="AnchorPane" prefHeight="0.0" prefWidth="262.0">
+         <children>
+            <TextField fx:id="basePath" layoutX="14.0" layoutY="14.0" prefHeight="26.0" prefWidth="322.0" />
+            <Button layoutX="346.0" layoutY="14.0" mnemonicParsing="false" onAction="#removePath" text="Rimuovi" />
+         </children>
+      </AnchorPane>
+   </content>
+</DialogPane>
