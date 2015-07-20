@@ -16,8 +16,9 @@
          <children>
             <HBox alignment="CENTER" spacing="10.0">
                <children>
-                  <Button mnemonicParsing="false" onAction="#createNewTrackList" text="Nuova" />
-                  <Button disable="true" mnemonicParsing="false" text="Cancella" />
+                  <Button mnemonicParsing="false" onAction="#handleNewTrackList" text="Nuova" />
+                  <Button fx:id="duplicateTrackListButton" disable="true" layoutX="110.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleDuplicateTrackList" text="Duplica" />
+                  <Button fx:id="deleteTrackListButton" disable="true" mnemonicParsing="false" onAction="#handleDeleteTracklist" text="Cancella" />
                </children>
             </HBox>
             <TableView fx:id="trackListTable" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
@@ -38,13 +39,32 @@
                <children>
                   <Button fx:id="chooseSong" disable="true" mnemonicParsing="false" onAction="#addSongFile" text="Aggiungi file/directory" />
                   <Button alignment="CENTER_RIGHT" disable="true" mnemonicParsing="false" text="Crea gioco" />
+                  <Button alignment="CENTER_RIGHT" layoutX="151.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleExportTocsv" text="Esporta su CSV" />
                </children>
             </HBox>
-            <TableView prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
-              <columns>
-                <TableColumn prefWidth="75.0" text="C1" />
-              </columns>
-            </TableView>
+            <TableView fx:id="songTable" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+               <columns>
+                  <TableColumn fx:id="idColumn" prefWidth="75.0" text="id" />
+                  <TableColumn fx:id="titleColumn" prefWidth="75.0" text="Titolo" />
+                  <TableColumn fx:id="artistColumn" prefWidth="75.0" text="Artista" />
+                  <TableColumn fx:id="albumColumn" prefWidth="75.0" text="Album" />
+                  <TableColumn fx:id="fileNameColumn" prefWidth="75.0" text="File" />
+                  <TableColumn fx:id="playedColumn" prefWidth="75.0" text="Played" />
+                  <TableColumn fx:id="OKColumn" prefWidth="75.0" text="OK" />
+                  <TableColumn fx:id="KOColumn" prefWidth="75.0" text="KO" />
+               </columns>
+               <contextMenu>
+                  <ContextMenu>
+                    <items>
+                      <MenuItem fx:id="moveUpMenuItem" mnemonicParsing="false" onAction="#handleMoveUp" text="Sposta su" />
+                        <MenuItem fx:id="moveDownMenuItem" mnemonicParsing="false" onAction="#handleMoveDown" text="Sposta giù" />
+                        <MenuItem mnemonicParsing="false" text="Sposta in finale" />
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                        <MenuItem mnemonicParsing="false" onAction="#handleSongDeletion" text="Cancella" />
+                    </items>
+                  </ContextMenu>
+               </contextMenu></TableView>
+            <Button fx:id="saveTrackListButton" mnemonicParsing="false" onAction="#handleSaveTrackList" text="Salva tracklist" />
          </children>
       </VBox>
    </center>

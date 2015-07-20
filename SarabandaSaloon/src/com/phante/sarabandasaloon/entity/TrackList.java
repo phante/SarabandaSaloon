@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,6 +59,70 @@ public class TrackList {
         name.setValue(trackListName);
     }
 
+    public void moveToFinal(Song song) {
+        songList.remove(song);
+        finalSongList.add(song);
+
+        // Aggiorna l'id
+        updateSongIndex();
+    }
+
+    public void moveToManche(Song song) {
+        finalSongList.remove(song);
+        songList.add(song);
+
+        // Aggiorna l'id
+        updateSongIndex();
+    }
+
+    public void moveUp(Song song) {
+        int index = songList.indexOf(song);
+        songList.remove(song);
+        songList.add(index - 1, song);
+
+        // Aggiorna l'id
+        updateSongIndex();
+    }
+
+    public void moveDown(Song song) {
+        int index = songList.indexOf(song);
+        songList.remove(song);
+        songList.add(index + 1, song);
+
+        // Aggiorna l'id
+        updateSongIndex();
+    }
+
+    /*    public void remove(Song song) {
+    int index = songList.indexOf(song);
+    songList.remove(song);
+    
+    // Aggiorna l'id
+    updateSongIndex();
+    }*/
+    
+    public void removeAll(Collection<Song> removeList) {
+        songList.removeAll(removeList);
+        
+        // Aggiorna l'id
+        updateSongIndex();
+    }
+
+    private void updateSongIndex() {
+        DecimalFormat format = new DecimalFormat("000");
+        int index = 1;
+        for (Song song : songList) {
+            String id = format.format(index++);
+            song.setId(id);
+        }
+
+        index = 1;
+        for (Song song : finalSongList) {
+            String id = format.format(index++);
+            song.setId(id);
+        }
+    }
+
     /**
      * Carica la lista dei file audio con estensione mp3 o m4a dal path indicato
      *
@@ -70,14 +134,14 @@ public class TrackList {
         //finalSongList.clear();
 
         DecimalFormat format = new DecimalFormat("000");
-        
+
         Logger.getLogger(TrackList.class.getName()).log(Level.INFO, "Carico le canzoni da {0}", path.getPath());
 
         // Legge i file e crea le canzoni associate
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path.toPath(), "*.{mp3, m4a}")) {
             for (Path entry : stream) {
                 Logger.getLogger(TrackList.class.getName()).log(Level.INFO, "Carico {0}", entry.getFileName());
-                
+
                 // identifica il comportamento dal nome del file
                 String fileName = entry.getFileName().toString();
 
@@ -94,7 +158,7 @@ public class TrackList {
         } catch (IOException ex) {
             Logger.getLogger(TrackList.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         Logger.getLogger(TrackList.class.getName()).log(Level.INFO, "La tracklist adesso ha {0} canzoni per la manche e {1} per la finale", new Object[]{songList.size(), finalSongList.size()});
     }
 
@@ -138,6 +202,7 @@ public class TrackList {
 
     public void saveTrackList(File file) {
         try {
+            Logger.getLogger(TrackList.class.getName()).log(Level.INFO, "Salva la tracklist sul file {0}", file.getPath());
             JAXBContext context = JAXBContext.newInstance(TrackList.class);
             Marshaller m = context.createMarshaller();
             m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);

@@ -34,19 +34,28 @@ import javafx.util.Duration;
  * @author deltedes
  */
 public class Song {
-    private final StringProperty id = new SimpleStringProperty();
-    private final StringProperty fileName = new SimpleStringProperty();
-    private final StringProperty title = new SimpleStringProperty();
-    private final StringProperty artist = new SimpleStringProperty();
-    private final StringProperty album = new SimpleStringProperty();
-    private final StringProperty totalDuration = new SimpleStringProperty();
+    private StringProperty id = new SimpleStringProperty();
+    private StringProperty fileName = new SimpleStringProperty();
+    private StringProperty title = new SimpleStringProperty();
+    private StringProperty artist = new SimpleStringProperty();
+    private StringProperty album = new SimpleStringProperty();
+    private StringProperty totalDuration = new SimpleStringProperty();
 
-    private final BooleanProperty played = new SimpleBooleanProperty();
-    private final BooleanProperty ok = new SimpleBooleanProperty();
-    private final BooleanProperty ko = new SimpleBooleanProperty();
+    private BooleanProperty played = new SimpleBooleanProperty();
+    private BooleanProperty ok = new SimpleBooleanProperty();
+    private BooleanProperty ko = new SimpleBooleanProperty();
     
-    private final MediaPlayer player;
+    private MediaPlayer player;
     private Duration duration;
+    
+    private Song() {
+        id.setValue("-");
+        fileName.setValue("");
+        played.setValue(false);
+        ok.setValue(false);
+        ko.setValue(false);
+        player = null;
+    }
 
     /**
      * Costruttore di default
@@ -61,7 +70,11 @@ public class Song {
         ok.setValue(false);
         ko.setValue(false);
 
-        player = new MediaPlayer(new Media(source));
+       loadMedia();
+    }
+    
+    private void loadMedia() {
+        player = new MediaPlayer(new Media(fileName.getValue()));
 
         player.setOnReady(() -> {
             duration = player.totalDurationProperty().getValue();
@@ -90,8 +103,9 @@ public class Song {
             title.setValue((String) metadata.get("title"));
             album.setValue((String) metadata.get("album"));
             artist.setValue((String) metadata.get("artist"));
+            Logger.getLogger(Song.class.getName()).log(Level.FINE, "Metadati di {0}: titolo {1}, album {2}, artista {3}", new Object[]{fileName.getValue(), title.getValue(), artist.getValue(), album.getValue()});
         });
-
+        
     }
 
     public StringProperty idProperty() {
@@ -114,8 +128,9 @@ public class Song {
         return fileName.getValue();
     }
     
-    public void setFileName(String newId) {
-        fileName.set(newId);
+    public void setFileName(String file) {
+        fileName.set(file);
+        loadMedia();
     }
     
     public StringProperty titleProperty() {

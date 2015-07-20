@@ -21,7 +21,7 @@ import com.phante.sarabandasaloon.SarabandaSaloon;
  *
  * @author elvisdeltedesco
  */
-public class PreferencesUtility {
+ public class PreferencesUtility {
     public static final String BASE_PATH = "SarabandaPath";
     public static final String TRACKLIST_DIRECTORY = "//tracklist//";
     
