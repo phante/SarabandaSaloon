@@ -42,28 +42,57 @@
                   <Button alignment="CENTER_RIGHT" layoutX="151.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleExportTocsv" text="Esporta su CSV" />
                </children>
             </HBox>
-            <TableView fx:id="songTable" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
-               <columns>
-                  <TableColumn fx:id="idColumn" prefWidth="75.0" text="id" />
-                  <TableColumn fx:id="titleColumn" prefWidth="75.0" text="Titolo" />
-                  <TableColumn fx:id="artistColumn" prefWidth="75.0" text="Artista" />
-                  <TableColumn fx:id="albumColumn" prefWidth="75.0" text="Album" />
-                  <TableColumn fx:id="fileNameColumn" prefWidth="75.0" text="File" />
-                  <TableColumn fx:id="playedColumn" prefWidth="75.0" text="Played" />
-                  <TableColumn fx:id="OKColumn" prefWidth="75.0" text="OK" />
-                  <TableColumn fx:id="KOColumn" prefWidth="75.0" text="KO" />
-               </columns>
-               <contextMenu>
-                  <ContextMenu>
-                    <items>
-                      <MenuItem fx:id="moveUpMenuItem" mnemonicParsing="false" onAction="#handleMoveUp" text="Sposta su" />
-                        <MenuItem fx:id="moveDownMenuItem" mnemonicParsing="false" onAction="#handleMoveDown" text="Sposta giù" />
-                        <MenuItem mnemonicParsing="false" text="Sposta in finale" />
-                        <SeparatorMenuItem mnemonicParsing="false" />
-                        <MenuItem mnemonicParsing="false" onAction="#handleSongDeletion" text="Cancella" />
-                    </items>
-                  </ContextMenu>
-               </contextMenu></TableView>
+            <TextField fx:id="searchTextField" />
+            <SplitPane dividerPositions="0.7" orientation="VERTICAL" VBox.vgrow="ALWAYS">
+               <items>
+                  <TableView fx:id="songTable" prefHeight="200.0" prefWidth="200.0">
+                     <columns>
+                        <TableColumn fx:id="songIdColumn" prefWidth="75.0" text="id" />
+                        <TableColumn fx:id="songTitleColumn" prefWidth="75.0" text="Titolo" />
+                        <TableColumn fx:id="songArtistColumn" prefWidth="75.0" text="Artista" />
+                        <TableColumn fx:id="songAlbumColumn" prefWidth="75.0" text="Album" />
+                        <TableColumn fx:id="songFileNameColumn" prefWidth="75.0" text="File" />
+                        <TableColumn fx:id="songPlayedColumn" prefWidth="75.0" text="Played" />
+                        <TableColumn fx:id="songOKColumn" prefWidth="75.0" text="OK" />
+                        <TableColumn fx:id="songKOColumn" prefWidth="75.0" text="KO" />
+                     </columns>
+                     <contextMenu>
+                        <ContextMenu>
+                          <items>
+                            <MenuItem fx:id="songMoveUpMenuItem" mnemonicParsing="false" onAction="#handleMoveUp" text="Sposta su" />
+                              <MenuItem fx:id="songMoveDownMenuItem" mnemonicParsing="false" onAction="#handleMoveDown" text="Sposta giù" />
+                              <MenuItem mnemonicParsing="false" onAction="#handleSwitchList" text="Sposta in finale" />
+                              <SeparatorMenuItem mnemonicParsing="false" />
+                              <MenuItem mnemonicParsing="false" onAction="#handleSongDeletion" text="Cancella" />
+                          </items>
+                        </ContextMenu>
+                     </contextMenu>
+                  </TableView>
+                  <TableView fx:id="finalTable" prefHeight="200.0" prefWidth="200.0">
+                     <columns>
+                        <TableColumn fx:id="finalIdColumn" prefWidth="75.0" text="id" />
+                        <TableColumn fx:id="finalTitleColumn" prefWidth="75.0" text="Titolo" />
+                        <TableColumn fx:id="finalArtistColumn" prefWidth="75.0" text="Artista" />
+                        <TableColumn fx:id="finalAlbumColumn" prefWidth="75.0" text="Album" />
+                        <TableColumn fx:id="finalFileNameColumn" prefWidth="75.0" text="File" />
+                        <TableColumn fx:id="finalPlayedColumn" prefWidth="75.0" text="Played" />
+                        <TableColumn fx:id="finalOKColumn" prefWidth="75.0" text="OK" />
+                        <TableColumn fx:id="finalKOColumn" prefWidth="75.0" text="KO" />
+                     </columns>
+                     <contextMenu>
+                        <ContextMenu>
+                           <items>
+                              <MenuItem fx:id="finalMoveUpMenuItem" mnemonicParsing="false" onAction="#handleMoveUp" text="Sposta su" />
+                              <MenuItem fx:id="finalMoveDownMenuItem" mnemonicParsing="false" onAction="#handleMoveDown" text="Sposta giù" />
+                              <MenuItem mnemonicParsing="false" onAction="#handleSwitchList" text="Sposta sulla manche" />
+                              <SeparatorMenuItem mnemonicParsing="false" />
+                              <MenuItem mnemonicParsing="false" onAction="#handleSongDeletion" text="Cancella" />
+                           </items>
+                        </ContextMenu>
+                     </contextMenu>
+                  </TableView>
+               </items>
+            </SplitPane>
             <Button fx:id="saveTrackListButton" mnemonicParsing="false" onAction="#handleSaveTrackList" text="Salva tracklist" />
          </children>
       </VBox>

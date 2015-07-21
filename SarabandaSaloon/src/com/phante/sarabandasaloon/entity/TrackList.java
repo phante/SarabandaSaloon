@@ -59,50 +59,80 @@ public class TrackList {
         name.setValue(trackListName);
     }
 
-    public void moveToFinal(Song song) {
-        songList.remove(song);
-        finalSongList.add(song);
-
-        // Aggiorna l'id
-        updateSongIndex();
-    }
-
-    public void moveToManche(Song song) {
-        finalSongList.remove(song);
-        songList.add(song);
+    public void switchContext(ObservableList<Song> songs) {
+        ObservableList<Song> sourceList;
+        ObservableList<Song> destList;
+        
+        Logger.getLogger(TrackList.class.getName()).log(Level.INFO, "Scambio la lista di {0} canzoni", songs.size());
+        
+        if (songList.containsAll(songs)) {
+            Logger.getLogger(TrackList.class.getName()).log(Level.INFO, "Scambio dalla manche alla finale");
+            sourceList = songList;
+            destList = finalSongList;
+        } else {
+            Logger.getLogger(TrackList.class.getName()).log(Level.INFO, "Scambio dalla finale alla manche");
+            sourceList = finalSongList;
+            destList = songList;
+        }
+        
+        Logger.getLogger(TrackList.class.getName()).log(Level.INFO, "Le liste hanno rispettivamente {0} e {1} canzoni", new Object[]{songList.size(), finalSongList.size()});
+        
+        ObservableList<Song> newList = FXCollections.observableArrayList();
+        songs.stream().forEach((song) -> {
+            newList.add(song);
+        });
+        
+        sourceList.removeAll(newList);
+        destList.addAll(newList);
+                
+        Logger.getLogger(TrackList.class.getName()).log(Level.INFO, "Le liste dopo lo scambio hanno rispettivamente {0} e {1} canzoni", new Object[]{songList.size(), finalSongList.size()});
 
         // Aggiorna l'id
         updateSongIndex();
     }
 
     public void moveUp(Song song) {
-        int index = songList.indexOf(song);
-        songList.remove(song);
-        songList.add(index - 1, song);
-
-        // Aggiorna l'id
-        updateSongIndex();
+        ObservableList<Song> sourceList = null;
+        if (songList.contains(song)) {
+            sourceList = songList;
+        } else if (finalSongList.contains(song)) {
+            sourceList = finalSongList;
+        }
+        
+        if (sourceList != null) {
+            int newIndex = sourceList.indexOf(song) == 0 ? 0 : sourceList.indexOf(song) - 1;
+            sourceList.remove(song);
+            sourceList.add(newIndex, song);
+            
+            // Aggiorna l'id
+            updateSongIndex();
+        }
     }
 
     public void moveDown(Song song) {
-        int index = songList.indexOf(song);
-        songList.remove(song);
-        songList.add(index + 1, song);
-
-        // Aggiorna l'id
-        updateSongIndex();
+        ObservableList<Song> sourceList = null;
+        if (songList.contains(song)) {
+            sourceList = songList;
+        } else if (finalSongList.contains(song)) {
+            sourceList = finalSongList;
+        }
+        
+        if (sourceList != null) {
+            int newIndex = sourceList.indexOf(song) == (sourceList.size()-1)  ? (sourceList.size()-1) : sourceList.indexOf(song)+1;
+            sourceList.remove(song);
+            sourceList.add(newIndex, song);
+            
+            // Aggiorna l'id
+            updateSongIndex();
+        }
     }
-
-    /*    public void remove(Song song) {
-    int index = songList.indexOf(song);
-    songList.remove(song);
-    
-    // Aggiorna l'id
-    updateSongIndex();
-    }*/
     
     public void removeAll(Collection<Song> removeList) {
-        songList.removeAll(removeList);
+        if (songList.containsAll(removeList)) {
+            songList.removeAll(removeList);
+        } else if (finalSongList.containsAll(removeList)) {
+            finalSongList.removeAll(removeList);
+        }
         
         // Aggiorna l'id
         updateSongIndex();
