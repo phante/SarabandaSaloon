@@ -15,44 +15,33 @@
  */
 package com.phante.sarabandasaloon.entity;
 
-import java.text.DecimalFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
  * @author deltedes
  */
 public class Game {
-   
-    private final StringProperty name = new SimpleStringProperty();
+    // Nome del gioco
+    private final ReadOnlyStringWrapper name = new ReadOnlyStringWrapper();
     // Indica se la manche è in corso
     private final ReadOnlyBooleanWrapper running = new ReadOnlyBooleanWrapper();
-    // Lista delle canzoni
-    //private final ObservableList<Song> songs = FXCollections.observableArrayList();
-    // Lista della canzoni per la manche finale
-    //private final ObservableList<Song> finalSongs = FXCollections.observableArrayList();
+    // La tracklist associata
+    private TrackList trackList;
+     
+    private Game() {
+        trackList = null;
+    }
     
-    TrackList trackList;
-        
-    public Game(TrackList newList) {
+    public Game(String newName, TrackList newList) {
+        name.setValue(newName);
         trackList = newList;
-    }
-    
-    public TrackList getTrackList() {
-        return trackList;
-    }
-
-    public ReadOnlyBooleanProperty runningProperty() {
-        return running.getReadOnlyProperty();
-    }
-    
-    public boolean isRunning () {
-        return running.getValue();
     }
     
     public void start() {
@@ -63,53 +52,41 @@ public class Game {
         running.setValue(false);
     }
     
-    /**
-     * Ritorna l'id della canzone
-     * 
-     * @param search
-     * @return 
-     */
-    /*public StringProperty getSongIDProperty(Song search) {
-    StringProperty id = new SimpleStringProperty();
-    id.setValue("undefined");
+    public ReadOnlyBooleanProperty runningProperty() {
+        return running.getReadOnlyProperty();
+    }
     
-    // Cerca la canzone sulla lista normale
-    int songId = trackList.songListProperty().indexOf(search);
-    if (songId != -1) {
-    DecimalFormat format = new DecimalFormat("000");
-    id.setValue(format.format(songId + 1));
-    } else {
-    songId = trackList.finalSongsListProperty().indexOf(search);
-    if (songId != -1) {
-    String c = new StringBuilder().append((char) ('A' + (char)songId)).toString();
-    id.setValue(c);
+    public void setRunning(boolean value) {
+        running.setValue(value);
     }
-    }
-    return id;
-    }*/
     
-    /*public String getSongID(Song search) {
-    return getSongIDProperty(search).getValue();
-    }*/
+    public boolean getRunning() {
+        return running.getValue();
+    }
     
-    /**
-     * Sposta la canzone indicata dalla lista normale alla lista delle finali
-     * 
-     * @param currentSong 
-     */
-    public void moveSongToFinal(Song currentSong) {
-        Logger.getLogger(Game.class.getName()).log(Level.INFO, "Sposto {0} sulla finale.", currentSong.getFileName());
-        trackList.songListProperty().remove(currentSong);
-        trackList.finalSongsListProperty().add(currentSong);
+    public boolean isRunning () {
+        return running.getValue();
     }
-
-    /**
-     * Sposta la canzone indicata dalla lista della finale alla lista normale
-     * @param currentSong 
-     */
-    public void moveSongToGame(Song currentSong) {
-        Logger.getLogger(Game.class.getName()).log(Level.INFO, "Sposto {0} sulla manche.", currentSong.getFileName());
-        trackList.finalSongsListProperty().remove(currentSong);
-        trackList.songListProperty().add(currentSong);
+    
+    public ReadOnlyStringProperty nameProperty() {
+        return name.getReadOnlyProperty();
     }
+    
+    public void setName(String newName) {
+        name.setValue(newName);
+    }
+    
+    public String getName() {
+        return name.getValue();
+    }
+    
+    @XmlTransient
+    public void setTrackList(TrackList newList) {
+        trackList = newList;
+    }
+    
+    public TrackList getTrackList() {
+        return trackList;
+    }
+    
 }

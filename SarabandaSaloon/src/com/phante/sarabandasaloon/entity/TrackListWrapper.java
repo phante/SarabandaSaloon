@@ -15,8 +15,6 @@
  */
 package com.phante.sarabandasaloon.entity;
 
-import com.phante.sarabandasaloon.ui.RootController;
-import com.phante.sarabandasaloon.ui.TrackListController;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,7 +22,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -38,28 +35,44 @@ public class TrackListWrapper {
     private File file;
     private StringProperty name = new SimpleStringProperty();
 
+    /**
+     * Costruttore di default
+     */
     private TrackListWrapper() {
-        this.file = null;
-        this.name.setValue(null);
+        file = null;
+        name.setValue(null);
     }
-    
-    public TrackListWrapper(TrackList trackList, File file) {
-        this.file = file;
+
+    /**
+     * Costruttore specifico
+     *
+     * @param trackList
+     */
+    public TrackListWrapper(TrackList trackList) {
+        this.file = trackList.getFile();
         this.name = trackList.nameProperty();
     }
 
-    public static TrackListWrapper loadTrackListWrapperFromFile(File file) {
+    /**
+     * Carica le informazioni dal file
+     *
+     * @param file
+     * @return
+     */
+    public static TrackListWrapper fromFile(File file) {        
         TrackListWrapper trackListWrapper = new TrackListWrapper();
         try {
             JAXBContext context = JAXBContext.newInstance(TrackListWrapper.class);
             Unmarshaller um = context.createUnmarshaller();
-            
+
             trackListWrapper = (TrackListWrapper) um.unmarshal(file);
             trackListWrapper.setFile(file);
         } catch (JAXBException ex) {
             Logger.getLogger(TrackListWrapper.class.getName()).log(Level.SEVERE, null, ex);
         }
         
+        //Logger.getLogger(TrackListWrapper.class.getName()).log(Level.INFO, "Caricata la tracklist {0} dal file {1}", new Object[]{trackListWrapper.getName(), trackListWrapper.getFile().getPath()});
+
         return trackListWrapper;
     }
 
@@ -83,4 +96,7 @@ public class TrackListWrapper {
         return file;
     }
 
+    public TrackList getTrackList() {
+        return TrackList.fromFile(file);
+    }
 }

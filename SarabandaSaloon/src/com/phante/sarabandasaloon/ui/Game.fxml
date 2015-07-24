@@ -10,7 +10,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="671.0" prefWidth="933.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.phante.sarabandasaloon.ui.GameController">
+<StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="671.0" prefWidth="933.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.phante.sarabandasaloon.ui.GameController">
     <children>
         <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
             <left>
@@ -148,13 +148,6 @@
                                       <TableColumn fx:id="songArtistColumn" prefWidth="293.0" text="Artista" />
                                       <TableColumn fx:id="songAlbumColumn" prefWidth="163.0" text="Album" />
                                   </columns>
-                                  <contextMenu>
-                                      <ContextMenu>
-                                          <items>
-                                              <MenuItem mnemonicParsing="false" onAction="#handleMoveToFinalSongList" text="Sposta sulla manche finale" />
-                                          </items>
-                                      </ContextMenu>
-                                  </contextMenu>
                               </TableView>
                               <TableView fx:id="finalSongTable">
                                   <columns>
@@ -166,13 +159,6 @@
                                       <TableColumn fx:id="finalSongArtistColumn" prefWidth="293.0" text="Artista" />
                                       <TableColumn fx:id="finalSongAlbumColumn" prefWidth="163.0" text="Album" />
                                   </columns>
-                                  <contextMenu>
-                                      <ContextMenu>
-                                          <items>
-                                              <MenuItem mnemonicParsing="false" onAction="#handleMoveToSongList" text="Sposta sulle manche normali" />
-                                          </items>
-                                      </ContextMenu>
-                                  </contextMenu>
                               </TableView>
                      </items>
                   </SplitPane>
@@ -180,11 +166,19 @@
             </VBox>
             </center>
             <top>
-                <HBox fx:id="buttonPane" alignment="CENTER" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="100.0" spacing="10.0" BorderPane.alignment="CENTER">
+            <VBox BorderPane.alignment="CENTER">
                <BorderPane.margin>
                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                </BorderPane.margin>
-            </HBox>
+               <children>
+                  <FlowPane>
+                     <children>
+                        <ToggleButton mnemonicParsing="false" text="Gioco Libero" />
+                     </children>
+                  </FlowPane>
+                      <HBox fx:id="buttonPane" alignment="CENTER" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="100.0" spacing="10.0" />
+               </children>
+            </VBox>
             </top>
          <bottom>
             <GridPane alignment="CENTER" BorderPane.alignment="CENTER">

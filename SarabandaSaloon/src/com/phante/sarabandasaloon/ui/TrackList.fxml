@@ -21,10 +21,19 @@
                   <Button fx:id="deleteTrackListButton" disable="true" mnemonicParsing="false" onAction="#handleDeleteTracklist" text="Cancella" />
                </children>
             </HBox>
-            <TableView fx:id="trackListTable" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+            <TableView fx:id="trackListTable" prefWidth="200.0" VBox.vgrow="ALWAYS">
               <columns>
-                <TableColumn fx:id="trackListNameColumn" maxWidth="1.7976931348623157E308" minWidth="-1.0" prefWidth="200.0" text="Nome" />
+                  <TableColumn fx:id="trackListNameColumn" maxWidth="1.7976931348623157E308" minWidth="-1.0" prefWidth="200.0" text="Nome" />
               </columns>
+               <contextMenu>
+                  <ContextMenu>
+                    <items>
+                      <MenuItem mnemonicParsing="false" onAction="#handleNewTrackList" text="Nuova tracklist" />
+                        <MenuItem mnemonicParsing="false" onAction="#handleDuplicateTrackList" text="Duplica" />
+                        <MenuItem mnemonicParsing="false" onAction="#handleDeleteTracklist" text="Cancella" />
+                    </items>
+                  </ContextMenu>
+               </contextMenu>
             </TableView>
          </children>
       </VBox>
@@ -38,8 +47,8 @@
             <HBox spacing="5.0">
                <children>
                   <Button fx:id="chooseSong" disable="true" mnemonicParsing="false" onAction="#addSongFile" text="Aggiungi file/directory" />
-                  <Button alignment="CENTER_RIGHT" disable="true" mnemonicParsing="false" text="Crea gioco" />
-                  <Button alignment="CENTER_RIGHT" layoutX="151.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleExportTocsv" text="Esporta su CSV" />
+                  <Button alignment="CENTER_RIGHT" disable="true" layoutX="151.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleExportTocsv" text="Esporta su CSV" />
+                  <Button fx:id="newGame" alignment="CENTER_RIGHT" disable="true" mnemonicParsing="false" onAction="#handleAddNewGame" text="Crea gioco su questa tracklist" />
                </children>
             </HBox>
             <TextField fx:id="searchTextField" />
@@ -61,7 +70,7 @@
                           <items>
                             <MenuItem fx:id="songMoveUpMenuItem" mnemonicParsing="false" onAction="#handleMoveUp" text="Sposta su" />
                               <MenuItem fx:id="songMoveDownMenuItem" mnemonicParsing="false" onAction="#handleMoveDown" text="Sposta giù" />
-                              <MenuItem mnemonicParsing="false" onAction="#handleSwitchList" text="Sposta in finale" />
+                              <MenuItem mnemonicParsing="false" onAction="#handleSwitchListToFinal" text="Sposta in finale" />
                               <SeparatorMenuItem mnemonicParsing="false" />
                               <MenuItem mnemonicParsing="false" onAction="#handleSongDeletion" text="Cancella" />
                           </items>
@@ -84,7 +93,7 @@
                            <items>
                               <MenuItem fx:id="finalMoveUpMenuItem" mnemonicParsing="false" onAction="#handleMoveUp" text="Sposta su" />
                               <MenuItem fx:id="finalMoveDownMenuItem" mnemonicParsing="false" onAction="#handleMoveDown" text="Sposta giù" />
-                              <MenuItem mnemonicParsing="false" onAction="#handleSwitchList" text="Sposta sulla manche" />
+                              <MenuItem mnemonicParsing="false" onAction="#handleSwitchListToManche" text="Sposta sulla manche" />
                               <SeparatorMenuItem mnemonicParsing="false" />
                               <MenuItem mnemonicParsing="false" onAction="#handleSongDeletion" text="Cancella" />
                            </items>
@@ -93,7 +102,22 @@
                   </TableView>
                </items>
             </SplitPane>
-            <Button fx:id="saveTrackListButton" mnemonicParsing="false" onAction="#handleSaveTrackList" text="Salva tracklist" />
+            <Label fx:id="lockLabel" text="Stato lock della tracklist" />
+            <TableView fx:id="gameTable" prefHeight="100.0">
+              <columns>
+                <TableColumn fx:id="gameStatus" maxWidth="1.7976931348623157E308" minWidth="-1.0" prefWidth="100.0" text="In corso" />
+                <TableColumn fx:id="gameName" maxWidth="1.7976931348623157E308" minWidth="-1.0" prefWidth="500.0" text="Nome" />
+              </columns>
+               <contextMenu>
+                  <ContextMenu>
+                    <items>
+                      <MenuItem mnemonicParsing="false" onAction="#handleOpenGame" text="Apri" />
+                        <MenuItem mnemonicParsing="false" onAction="#handleDeleteGame" text="Cancella" />
+                    </items>
+                  </ContextMenu>
+               </contextMenu>
+            </TableView>
+            <Button fx:id="saveTrackListButton" disable="true" mnemonicParsing="false" onAction="#handleSaveTrackList" text="Salva tracklist" />
          </children>
       </VBox>
    </center>

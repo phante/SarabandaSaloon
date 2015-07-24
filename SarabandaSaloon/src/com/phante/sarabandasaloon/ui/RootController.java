@@ -15,6 +15,7 @@
  */
 package com.phante.sarabandasaloon.ui;
 
+import com.phante.sarabandasaloon.entity.Game;
 import com.phante.sarabandasaloon.entity.PreferencesUtility;
 import com.phante.sarabandasaloon.network.SarabandaSlaveController;
 import java.io.File;
@@ -43,7 +44,6 @@ import javafx.stage.Stage;
  */
 public class RootController implements Initializable {
 
-    //private File configPath;
     private Stage primaryStage;
     
     @FXML
@@ -65,7 +65,8 @@ public class RootController implements Initializable {
             // Carico il controller delle tracklist
             FXMLLoader loader = new FXMLLoader(getClass().getResource("TrackList.fxml"));
             Pane trackListPane = loader.load();
-            //((TrackListController) loader.getController()).setConfigPath(configPath);
+            TrackListController trackListController = (TrackListController) loader.getController();
+            trackListController.setParent(this);
             
             // Aggiunge la gestione delle tracklist alla schermata principale
             Tab trackListTab = new Tab();
@@ -73,26 +74,6 @@ public class RootController implements Initializable {
             trackListTab.setText("Gestione TrackList");
             tabPane.getTabs().add(trackListTab);
             
-
-
-            
-            
-            /*FXMLLoader gameLoader = new FXMLLoader(getClass().getResource("Game.fxml"));
-            Pane gamePage = gameLoader.load();
-            gameController = (GameController) gameLoader.getController();
-            
-            Tab gameTab = new Tab();
-            gameTab.setContent(gamePage);
-            gameTab.setText("Game");
-            
-            TrackList tl = new TrackList("Nuova tracklist");
-            String source = getDefaultDirectoryFilePath().getAbsolutePath();
-            tl.loadMediaListFromDirectory(source);
-            saveTrackListDataToFile(tl);*/
-
-            //tl.loadMediaListFromDirectory("/Users/elvisdeltedesco/Music/iTunes/iTunes Music/Music/AC_DC/Black Ice");
-            //gameController.setGame(new Game(tl));
-
             /*
              FXMLLoader contentLoader = new FXMLLoader(getClass().getResource("Network.fxml"));
              Pane documentPage = contentLoader.load();
@@ -111,6 +92,28 @@ public class RootController implements Initializable {
         }
     }
     
+    public void addNewGameTab(Game game) {
+        try {
+            //Logger.getLogger(RootController.class.getName()).log(Level.INFO, "Creo un tab per il gioco {0}", game.getName() );
+            
+            FXMLLoader gameLoader = new FXMLLoader(getClass().getResource("Game.fxml"));
+            Pane gamePage = gameLoader.load();
+            GameController gameController = (GameController) gameLoader.getController();
+            gameController.setGame(game);
+            
+            Tab gameTab = new Tab();
+            gameTab.setContent(gamePage);
+            gameTab.setText(game.getName());
+            
+            tabPane.getTabs().add(gameTab);
+            
+            // Evidenzia il tab
+            tabPane.getSelectionModel().select(gameTab);
+        } catch (IOException ex) {
+            Logger.getLogger(RootController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     /**
      * Verifica se nella configurazione del sistema è già presente un path
      *
@@ -121,7 +124,7 @@ public class RootController implements Initializable {
         String filePath = PreferencesUtility.get(PreferencesUtility.BASE_PATH);
         File configPath;
         
-        Logger.getLogger(RootController.class.getName()).log(Level.INFO, "Il path di default della configurazione è {0}", filePath);
+        //Logger.getLogger(RootController.class.getName()).log(Level.INFO, "Il path di default della configurazione è {0}", filePath);
         
         File path;
         if (filePath == null) {
@@ -143,7 +146,7 @@ public class RootController implements Initializable {
         }
         
         if (!configPath.getPath().equals(filePath)) {
-            Logger.getLogger(RootController.class.getName()).log(Level.INFO, "Salvo {0} nelle impostazioni di default", configPath.getPath());
+            //Logger.getLogger(RootController.class.getName()).log(Level.INFO, "Salvo {0} nelle impostazioni di default", configPath.getPath());
             PreferencesUtility.set(PreferencesUtility.BASE_PATH, configPath.getPath());
         }
 
@@ -191,14 +194,4 @@ public class RootController implements Initializable {
     public void setStage(Stage stage) {
         primaryStage = stage;
     }
-
-    /* @FXML
-    public void handleErrorMenu() {
-    gameController.errorGame();
-    }*/
-
-    /*@FXML
-    public void handleCorrectMenu() {
-    gameController.goodGame();
-    }*/
 }

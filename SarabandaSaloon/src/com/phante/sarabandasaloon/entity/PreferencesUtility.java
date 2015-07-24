@@ -23,7 +23,11 @@ import com.phante.sarabandasaloon.SarabandaSaloon;
  */
  public class PreferencesUtility {
     public static final String BASE_PATH = "SarabandaPath";
-    public static final String TRACKLIST_DIRECTORY = "//tracklist//";
+    public static final String TIMEOUT_VALUE = "timeout";
+    public static final String CORRECT_TRACK = "correct_track";
+    public static final String ERROR_TRACK = "error_track";
+    public static final String TIMEOUT_TRACK = "timeout_track";
+    public static final String CLASSIC_NETWORK = "classic_network"; 
     
     public static String get(String properties) {
         java.util.prefs.Preferences prefs = java.util.prefs.Preferences.userNodeForPackage(SarabandaSaloon.class);

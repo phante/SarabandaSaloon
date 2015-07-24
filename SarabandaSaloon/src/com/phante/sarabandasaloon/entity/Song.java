@@ -179,7 +179,7 @@ public class Song {
     
     public void play() {
         player.play();
-        //played.setValue(true);
+        played.setValue(true);
     }
  
     public void pause() {

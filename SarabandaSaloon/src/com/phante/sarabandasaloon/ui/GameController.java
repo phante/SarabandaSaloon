@@ -55,9 +55,6 @@ import javafx.util.Duration;
  */
 public class GameController implements Initializable {
 
-    // Gestisce l'interfaccia in modo forzato costringendo l'utilizzatore a seguire un percorso obbligato
-    private static final boolean forceGamePlay = true;
-
     // Etichette con le informazioni sul brano
     @FXML
     private Label currentTitle = new Label();
@@ -89,12 +86,19 @@ public class GameController implements Initializable {
     @FXML
     private ToggleButton timerSwitch = new ToggleButton();
 
+    // Gestisce l'interfaccia in modo forzato costringendo l'utilizzatore a seguire un percorso obbligato
+    @FXML
+    private ToggleButton freeGameSwitch = new ToggleButton();
+
     // ProgressBar per il tempom totale di esecuzione
     @FXML
     private ProgressBar progress = new ProgressBar();
     // ProgressBar per il tempo del timer
     @FXML
     private ProgressBar progressTimer = new ProgressBar();
+
+    // Listener per l'indicazione del progresso sulla canzone
+    private ChangeListener<Duration> progressChangeListener;
 
     // Tabella con la lista delle canzoni della manche normale
     @FXML
@@ -151,12 +155,9 @@ public class GameController implements Initializable {
 
     // Gioco associato al controller
     private Game game;
-    
+
     // Canzone corrente
     private Song currentSong;
-    
-    // Listener per l'indicazione del progresso sulla canzone
-    private ChangeListener<Duration> progressChangeListener;
 
     /**
      * Inizializza il controller.
@@ -169,12 +170,11 @@ public class GameController implements Initializable {
         // Disabilita i pulsanti per la gestione delle risposte
         enableGameValutationInterface(false);
 
-        // Disabilita le tabelle di scelta
-        songTable.setDisable(true);
-        finalSongTable.setDisable(true);
-
         // Disabilita i pulsanti di scelta
         enablePlayerInterface(false);
+
+        // Inizializza il pannello con lo stato dei pushButton
+        pushButtonStatusPaneInit();
 
         // Imposta le singole colonne
         songIDColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty());
@@ -200,9 +200,6 @@ public class GameController implements Initializable {
         finalSongKOColumn.setCellValueFactory(cellData -> cellData.getValue().koProperty());
         finalSongKOColumn.setCellFactory((TableColumn<Song, Boolean> p) -> new CheckBoxTableCell<>());
 
-        // Inizializza il pannello con lo stato dei pushButton
-        pushButtonStatusPaneInit();
-
         // Inizializza gli elementi della status bar
         messageLabel.textProperty().bind(SarabandaSlaveController.getInstance().messageProperty());
         SarabandaSlaveController.getInstance().serverStatusProperty().addListener((observable, oldValue, newValue) -> {
@@ -218,29 +215,27 @@ public class GameController implements Initializable {
             }
         });
     }
-    
+
     /**
-     * Carica sul controller il game da gestire, quindi metre sull'inizialize è stato
-     * preimpostato l'aspetto grafico di base, qui andiamo a caricare e popolarlo
-     * con i dati del caso.
-     * 
-     * @param newGame 
+     * Carica sul controller il game da gestire, quindi mentre sull'inizialize è
+     * stato preimpostato l'aspetto grafico di base, qui andiamo a caricare e
+     * popolarlo con i dati del caso.
+     *
+     * @param newGame
      */
     public void setGame(Game newGame) {
+        //Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Imposto come gioco {0}", newGame.getName() );
         game = newGame;
-        
-        // Imposta i dati della tabella delle canzoni della manche normale
-        songTableInit(game.getTrackList().songListProperty(), songTable);
-        songTable.setDisable(true);
-        
-        // Imposta la tabella delle canzioni per la finale
-        songTableInit(game.getTrackList().finalSongsListProperty(), finalSongTable);
-        finalSongTable.setDisable(true);        
-    }
 
+        // Imposta i dati della tabella delle canzoni della manche normale
+        songTableInit(game.getTrackList().songsProperty(), songTable);
+        // Imposta la tabella delle canzioni per la finale
+        songTableInit(game.getTrackList().finalSongsProperty(), finalSongTable);
+    }
 
     /**
      * Inizializza l'aspetto grafico per lo stato dei pulsanti
+     * 
      */
     private void pushButtonStatusPaneInit() {
         // TODO Scollegare la dimensione statica e collegare il ridimensionamneto dei singoli pushbutton al parent
@@ -277,6 +272,7 @@ public class GameController implements Initializable {
 
     /**
      * Inizializza il comportamento della tabelle delle canzoni
+     * 
      */
     private void songTableInit(ObservableList<Song> songs, TableView<Song> table) {
         // Crea le versioni filtrate e ordinate della tabella
@@ -311,7 +307,7 @@ public class GameController implements Initializable {
         // Imposta il listener per identificare il click sulla tabella
         table.getSelectionModel().selectedItemProperty().addListener(
                 (observedValue, oldSong, newSong) -> {
-                    songSelection(newSong);
+                    songSelection(oldSong, newSong);
                 }
         );
 
@@ -359,74 +355,111 @@ public class GameController implements Initializable {
      *
      * @param song
      */
-    private void songSelection(Song song) {
-        if (currentSong != null) {
-            // Elimina il listener sui progressi
-            currentSong.getPlayer().currentTimeProperty().removeListener(progressChangeListener);
+    private void songSelection(Song oldSong, Song song) {
+        // Elimina il listener sui progressi
+        if (oldSong != null) {
+            oldSong.getPlayer().currentTimeProperty().removeListener(progressChangeListener);
         }
+        resetGameInterface();
 
         // Controllo formale di sicurezza
         if (song == null) {
-            resetGameInterface();
+            // Disabilito l'interfaccia del player
             enablePlayerInterface(false);
         } else {
-            resetGameInterface();
+            // Mi assicuro che la traccia parta dall'inizio
+            song.rewind();
+
+            // Abilito l'interfaccia del player
             enablePlayerInterface(true);
 
-            // Assegna la canzone corrente
-            currentSong = song;
-
-            // Imposta la traccia all'inizio
-            currentSong.rewind();
-
-            // Imposta l'interfaccia
-            // Imposto il contatempo a 0
+            // Resetto lo stato del segnatempo e delle progress bar
             updateTimeKeeper(Duration.ZERO);
-
             progress.setProgress(0); // resetta la progressbar complessiva
             progressTimer.setProgress(0); // resetta la progressbar del timer
 
-            // Gestisce le impostazioni del timer
-            handleTimer();
-
             // Imposta le etichette con i metadati
-            currentTitle.setText(currentSong.titleProperty().getValue());
-            currentAlbum.setText(currentSong.artistProperty().getValue());
-            currentArtist.setText(currentSong.albumProperty().getValue());
-            currentTotalDuration.setText(currentSong.getDuration().toString());
+            currentTitle.setText(song.titleProperty().getValue());
+            currentAlbum.setText(song.artistProperty().getValue());
+            currentArtist.setText(song.albumProperty().getValue());
+            currentTotalDuration.setText(song.getDuration().toString());
+
+            // Gestisce le impostazioni del timer
+            timerManagement(song);
 
             // Imposta il listener per le progressbar e il segnatempo
             progressChangeListener = (observableValue, oldValue, newValue) -> {
-                Duration currentTime = currentSong.getPlayer().getCurrentTime();
+                Duration currentTime = song.getPlayer().getCurrentTime();
 
                 // Abilita o disabilita le gestione della progress bar del timer
                 if (timerSwitch.selectedProperty().getValue()) {
                     progressTimer.setDisable(false);
-                    Double maxTime = getTimerValue().toMillis() < currentSong.getDuration().toMillis() ? getTimerValue().toMillis() : currentSong.getDuration().toMillis();
+                    Double maxTime = getTimerValue().toMillis() < song.getDuration().toMillis() ? getTimerValue().toMillis() : song.getDuration().toMillis();
                     progressTimer.setProgress(1.0 * currentTime.toMillis() / maxTime);
                 }
 
-                progress.setProgress(1.0 * currentTime.toMillis() / currentSong.getDuration().toMillis());
+                progress.setProgress(1.0 * currentTime.toMillis() / song.getDuration().toMillis());
 
                 updateTimeKeeper(currentTime);
             };
-            currentSong.getPlayer().currentTimeProperty().addListener(progressChangeListener);
+            song.getPlayer().currentTimeProperty().addListener(progressChangeListener);
 
             // Cambia lo stato del pulsante per consentire la pausa della canzone
-            currentSong.getPlayer().setOnPlaying(() -> {
+            song.getPlayer().setOnPlaying(() -> {
                 playButton.setText("Pause");
             });
 
             // Cambia lo stato del pulsante e allinea il contatempo al tempo reale
-            currentSong.getPlayer().setOnPaused(() -> {
-                updateTimeKeeper(currentSong.getPlayer().getCurrentTime());
+            song.getPlayer().setOnPaused(() -> {
+                updateTimeKeeper(song.getPlayer().getCurrentTime());
+                if (freeGameSwitch.isPressed()) enableGameValutationInterface(true);
                 playButton.setText("Play");
             });
 
             // Gestione del marker del timeoput
-            currentSong.getPlayer().setOnMarker((final MediaMarkerEvent event) -> {
+            song.getPlayer().setOnMarker((final MediaMarkerEvent event) -> {
                 timeoutGame();
             });
+
+            // Associo la canzone alla canzone corrente
+            currentSong = song;
+        }
+    }
+
+    /**
+     * Gestisce l'inserimento dei marker per la gestione del timer
+     *
+     * @param song
+     */
+    private void timerManagement(Song song) {
+        if (song != null) {
+            // Rimuove gli eventuali marker
+            final ObservableMap<String, Duration> marker = song.getPlayer().getMedia().getMarkers();
+            marker.clear();
+
+            if (timerSwitch.selectedProperty().getValue()) {
+                // Disabilita la modifica del timer e abilita la progressbar
+                timerValue.setDisable(true);
+                progressTimer.setDisable(false);
+
+                Duration timerStep = getTimerValue();
+                Duration newStep = Duration.ZERO.add(timerStep);
+                int i = 1;
+                while (newStep.lessThan(song.getDuration())) {
+                    Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Aggiungo un marker per il timer a {0}/{1} ", new Object[]{newStep.toSeconds(),song.getDuration()});
+                    marker.put(new StringBuffer()
+                            .append("SarabandaStop ")
+                            .append(i++)
+                            .toString(), 
+                            newStep);
+                    newStep = newStep.add(timerStep);
+                }                        
+            } else {
+                // Abilita la modifica del timer e disabilita la progressbar
+                timerValue.setDisable(false);
+                progressTimer.setProgress(0);
+                progressTimer.setDisable(true);
+            }
         }
     }
 
@@ -439,9 +472,7 @@ public class GameController implements Initializable {
          Riabilita l'interfaccia per far partire il brano. Se il gameplay è forzato l'interfaccia rimane disabilitata
          fino alla scelta del prossimo brano
          */
-        if (!forceGamePlay) {
-            enablePlayerInterface(true);
-        }
+        if (!freeGameSwitch.isPressed()) enablePlayerInterface(true);
 
         // Disabilita i pulsanti per la gestione delle risposte
         enableGameValutationInterface(false);
@@ -461,11 +492,12 @@ public class GameController implements Initializable {
         playButton.setDisable(!status);
         rewindButton.setDisable(!status);
     }
-    
+
     /**
-     * Si occupoa di abilitare/disabilitare i pulsanti per la valutazione del gioco
-     * 
-     * @param status 
+     * Si occupoa di abilitare/disabilitare i pulsanti per la valutazione del
+     * gioco
+     *
+     * @param status
      */
     public void enableGameValutationInterface(boolean status) {
         // Abilita i pulsanti per la gestione delle risposte
@@ -505,16 +537,17 @@ public class GameController implements Initializable {
         currentSong.pause();
 
         // Disabilita i pulsanti per il play o la pausa
-        if (forceGamePlay) {
+        if (freeGameSwitch.isPressed()) {
             enablePlayerInterface(false);
         }
 
         // Abilita i pulsanti per la gestione delle risposte
         enableGameValutationInterface(true);
     }
-    
+
     /**
-     * Riprendo un gioco interrotto a seguito della pressione di un pushbutton o della messa in pausa
+     * Riprendo un gioco interrotto a seguito della pressione di un pushbutton o
+     * della messa in pausa
      */
     public void continueGame() {
         // Disabilita i pulsanti per la gestione delle risposte
@@ -536,11 +569,10 @@ public class GameController implements Initializable {
 
         // Imposta i push button non premuti con in errore
         //SarabandaSlaveController.getInstance().errorUnpressedPushButton();
-
         // TODO Esegue suono di vittoria
-        
         // Chiude la canzone corrente e resetta l'interfaccia
         game.stop();
+        currentSong.okProperty().setValue(true);
         resetGameInterface();
     }
 
@@ -553,9 +585,8 @@ public class GameController implements Initializable {
 
         // Invia un comando di errore al master del sarabanda
         SarabandaSlaveController.getInstance().sendSarabandaError();
-        
-        // TODO Esegue suono di errore
 
+        // TODO Esegue suono di errore
         // Disabilita i pulsanti per la valutazione
         enableGameValutationInterface(false);
         // Riabilita l'interfaccia per eseguire il brano, in questo caso è necessario dare la possibile di continuare
@@ -586,11 +617,10 @@ public class GameController implements Initializable {
 
         // Forsa lo stato dei pulsanti in errore con il doppio scopo di dare un segno visuale e bloccare i pulsanti
         //SarabandaSlaveController.getInstance().errorUnpressedPushButton();
-
         // TODO Esegue il suono dell'errore finale
-        
         // Chiude il gioco e resetta l'interfaccia
         game.stop();
+        currentSong.koProperty().setValue(true);
         resetGameInterface();
     }
 
@@ -619,7 +649,6 @@ public class GameController implements Initializable {
         String millis = format.format((int) Math.floor(absoluteTime % 1000) / 10);
 
         //Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Aggiorno il contatempo con i valori {0}{1}:{2}.{3}", new Object[]{sign, minute, second, millis});
-
         String timeStr = new StringBuilder()
                 .append(sign)
                 .append(minute)
@@ -636,19 +665,10 @@ public class GameController implements Initializable {
      *
      * @return
      */
-    private Duration getTimerValue() {
+    private Duration getTimerValue
+        () {
         return Duration.seconds(Double.parseDouble(timerValue.textProperty().getValue()));
     }
-    
-    /**
-     * Carica la lista delle canzoni
-     *
-     * @param path
-     */
-    /*public void loadGameSong(String path) {
-    Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Carico la lista delle canzoni");
-    currentGame.loadMediaListFromDirectory(path);
-    }*/
 
     /**
      * gestisce il pulsante play
@@ -673,29 +693,7 @@ public class GameController implements Initializable {
      */
     @FXML
     private void handleTimer() {
-        if (timerSwitch.selectedProperty().getValue()) {
-            // Disabilita la modifica del timer e abilita la progressbar
-            timerValue.setDisable(true);
-            progressTimer.setDisable(false);
-
-            if (currentSong != null) {
-                final ObservableMap<String, Duration> marker = currentSong.getPlayer().getMedia().getMarkers();
-                // Ripulisce la lista dei marker (PER SICUREZZA)
-                marker.clear();
-                // TODO aggiungere un marker ogni getTimerValue() fino alla fine del brano
-                marker.put("SarabandaStop", getTimerValue());
-            }
-        } else {
-            // Abilita la modifica del timer e disaabilita la progressbar
-            timerValue.setDisable(false);
-            progressTimer.setProgress(0);
-            progressTimer.setDisable(true);
-
-            if (currentSong != null) {
-                final ObservableMap<String, Duration> marker = currentSong.getPlayer().getMedia().getMarkers();
-                marker.clear();
-            }
-        }
+        timerManagement(currentSong);
     }
 
     /**
@@ -717,7 +715,7 @@ public class GameController implements Initializable {
     public void handleSarabandaFullReset() {
         SarabandaSlaveController.getInstance().sendSarabandaFullReset();
     }
-    
+
     @FXML
     public void handleSarabandaError() {
         SarabandaSlaveController.getInstance().sendSarabandaError();
@@ -727,19 +725,9 @@ public class GameController implements Initializable {
     public void handleSarabandaDemo() {
         SarabandaSlaveController.getInstance().sendSarabandaDemo();
     }
-    
+
     @FXML
     public void handleSarabandaHWReset() {
         SarabandaSlaveController.getInstance().sendSarabandaMasterPhysicalReset();
-    }
-
-    @FXML
-    public void handleMoveToFinalSongList() {
-        //currentGame.moveSongToFinal(currentSong);
-    }
-
-    @FXML
-    public void handleMoveToSongList() {
-        //currentGame.moveSongToGame(currentSong);
     }
 }
