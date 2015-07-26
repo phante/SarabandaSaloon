@@ -42,9 +42,6 @@ public class SarabandaSaloon extends Application {
         Pane rootLayout = rootloader.load();
         ((RootController) rootloader.getController()).setStage(primaryStage);
 
-        // Inizializza il controller del Sarabanda
-        SarabandaSlaveController sarabanda = SarabandaSlaveController.getInstance();
-
         Scene scene = new Scene(rootLayout);
 
         primaryStage.setTitle("Sarabanda Saloon");

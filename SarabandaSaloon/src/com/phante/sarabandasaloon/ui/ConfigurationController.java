@@ -15,10 +15,13 @@
  */
 package com.phante.sarabandasaloon.ui;
 
-import com.phante.sarabandasaloon.entity.PreferencesUtility;
+import com.phante.sarabandasaloon.entity.Preferences;
 import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
@@ -39,10 +42,8 @@ public class ConfigurationController implements Initializable {
 
     @FXML
     private TextField basePath = new TextField();
-
     @FXML
     private TextField timeoutValue = new TextField();
-
     @FXML
     private TextField correctTrack = new TextField();
     @FXML
@@ -60,12 +61,12 @@ public class ConfigurationController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        basePath.setText(PreferencesUtility.get(PreferencesUtility.BASE_PATH));
-        timeoutValue.setText(PreferencesUtility.get(PreferencesUtility.TIMEOUT_VALUE));
-        correctTrack.setText(PreferencesUtility.get(PreferencesUtility.CORRECT_TRACK));
-        errorTrack.setText(PreferencesUtility.get(PreferencesUtility.ERROR_TRACK));
-        timeoutTrack.setText(PreferencesUtility.get(PreferencesUtility.TIMEOUT_TRACK));
-        classicNetwork.selectedProperty().setValue(Boolean.parseBoolean(PreferencesUtility.CLASSIC_NETWORK));
+        basePath.setText(Preferences.getInstance().getBasePath());
+        timeoutValue.setText(Integer.toString(Preferences.getInstance().getTimeout()));
+        correctTrack.setText(Preferences.getInstance().getCorrectTrack());
+        errorTrack.setText(Preferences.getInstance().getErrorTrack());
+        timeoutTrack.setText(Preferences.getInstance().getTimeoutTrack());
+        classicNetwork.selectedProperty().setValue(Preferences.getInstance().getClassicNetwork());
     }
 
     public void setDialogStage(Stage dialogStage) {
@@ -79,23 +80,28 @@ public class ConfigurationController implements Initializable {
         dirChooser.setTitle("Seleziona la directory di configurazione del Sarabanda");
         File newPath = dirChooser.showDialog(null);
     }
-    
+
     private void chooseAudioFile(TextField field) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialDirectory(new File(basePath.getText()));
         fileChooser.getExtensionFilters().addAll(
-                new ExtensionFilter("Audio Files", "*.mp4", "*.m4a")
+                new ExtensionFilter("Audio Files", "*.mp3", "*.m4a")
         );
         fileChooser.setTitle("Seleziona la traccia audio");
         File file = fileChooser.showOpenDialog(null);
-        
+
         field.setText(file.getPath());
     }
-    
-    private void testAudioFile(String path) {
-        MediaPlayer player = new MediaPlayer(new Media(path));
-        
-        player.play();
+
+    private void testAudioFile(String songPath) {
+        try {
+            String path = new File(songPath).toURI().toURL().toString();
+            MediaPlayer player = new MediaPlayer(new Media(path));
+            
+            player.play();
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(ConfigurationController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @FXML
@@ -130,6 +136,12 @@ public class ConfigurationController implements Initializable {
 
     @FXML
     private void handleOkButton() {
+        Preferences.getInstance().setBasePath(basePath.getText());
+        Preferences.getInstance().setTimeout(Integer.parseInt(timeoutValue.getText()));
+        Preferences.getInstance().setCorrectTrack(correctTrack.getText());
+        Preferences.getInstance().setErrorTrack(errorTrack.getText());
+        Preferences.getInstance().setTimeoutTrack(timeoutTrack.getText());
+        Preferences.getInstance().setClassicNetwork(classicNetwork.selectedProperty().getValue());
         dialogStage.close();
     }
 

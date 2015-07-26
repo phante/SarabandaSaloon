@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Elvis Del Tedesco.
+ * Copyright 2015 deltedes.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -468,10 +468,18 @@ public class SarabandaController {
         return buttons;
     }
 
+    /**
+     * 
+     * @return 
+     */
     public ReadOnlyBooleanProperty classicModeProperty() {
         return classicModeProperty.getReadOnlyProperty();
     }
 
+    /**
+     * 
+     * @return 
+     */
     public ReadOnlyBooleanProperty onlyLocalhostModeProperty() {
         return onlyLocalhostModeProperty.getReadOnlyProperty();
     }

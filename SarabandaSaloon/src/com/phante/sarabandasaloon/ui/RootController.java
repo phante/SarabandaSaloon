@@ -16,7 +16,7 @@
 package com.phante.sarabandasaloon.ui;
 
 import com.phante.sarabandasaloon.entity.Game;
-import com.phante.sarabandasaloon.entity.PreferencesUtility;
+import com.phante.sarabandasaloon.entity.Preferences;
 import com.phante.sarabandasaloon.network.SarabandaSlaveController;
 import java.io.File;
 import java.io.IOException;
@@ -86,6 +86,7 @@ public class RootController implements Initializable {
             //tabPane.getTabs().setAll(gameTab);
 
             // Avvia il server
+            SarabandaSlaveController.getInstance().setClassicMode(Preferences.getInstance().getClassicNetwork());
             SarabandaSlaveController.getInstance().startServer();
         } catch (IOException ex) {
             Logger.getLogger(RootController.class.getName()).log(Level.SEVERE, null, ex);
@@ -121,7 +122,7 @@ public class RootController implements Initializable {
      */
     private File checkDefaultDirectoryPath() {
         // Carica il path dalle impostazioni
-        String filePath = PreferencesUtility.get(PreferencesUtility.BASE_PATH);
+        String filePath = Preferences.getInstance().getBasePath();
         File configPath;
         
         //Logger.getLogger(RootController.class.getName()).log(Level.INFO, "Il path di default della configurazione è {0}", filePath);
@@ -147,7 +148,7 @@ public class RootController implements Initializable {
         
         if (!configPath.getPath().equals(filePath)) {
             //Logger.getLogger(RootController.class.getName()).log(Level.INFO, "Salvo {0} nelle impostazioni di default", configPath.getPath());
-            PreferencesUtility.set(PreferencesUtility.BASE_PATH, configPath.getPath());
+            Preferences.getInstance().setBasePath(configPath.getPath());
         }
 
         return configPath;

@@ -17,9 +17,12 @@ package com.phante.sarabandasaloon.ui;
 
 import com.phante.sarabandasaloon.entity.PushButtonStatus;
 import com.phante.sarabandasaloon.entity.Game;
+import com.phante.sarabandasaloon.entity.Preferences;
 import com.phante.sarabandasaloon.entity.PushButton;
 import com.phante.sarabandasaloon.entity.Song;
 import com.phante.sarabandasaloon.network.SarabandaSlaveController;
+import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ResourceBundle;
@@ -44,7 +47,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.layout.HBox;
+import javafx.scene.media.Media;
 import javafx.scene.media.MediaMarkerEvent;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
@@ -159,6 +164,11 @@ public class GameController implements Initializable {
     // Canzone corrente
     private Song currentSong;
 
+    // Media per i suoni di gioco
+    private MediaPlayer correctMediaPlayer;
+    private MediaPlayer errorMediaPlayer;
+    private MediaPlayer timeoutMediaPlayer;
+
     /**
      * Inizializza il controller.
      *
@@ -167,6 +177,17 @@ public class GameController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        timerValue.setText(Integer.toString(Preferences.getInstance().getTimeout()));
+
+        try {
+            // Inizializza i mediaplayer per i suoni di gioco
+            correctMediaPlayer = new MediaPlayer(new Media(new File(Preferences.getInstance().getCorrectTrack()).toURI().toURL().toString()));
+            errorMediaPlayer = new MediaPlayer(new Media(new File(Preferences.getInstance().getErrorTrack()).toURI().toURL().toString()));
+            timeoutMediaPlayer = new MediaPlayer(new Media(new File(Preferences.getInstance().getTimeoutTrack()).toURI().toURL().toString()));
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(GameController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         // Disabilita i pulsanti per la gestione delle risposte
         enableGameValutationInterface(false);
 
@@ -235,7 +256,7 @@ public class GameController implements Initializable {
 
     /**
      * Inizializza l'aspetto grafico per lo stato dei pulsanti
-     * 
+     *
      */
     private void pushButtonStatusPaneInit() {
         // TODO Scollegare la dimensione statica e collegare il ridimensionamneto dei singoli pushbutton al parent
@@ -272,7 +293,7 @@ public class GameController implements Initializable {
 
     /**
      * Inizializza il comportamento della tabelle delle canzoni
-     * 
+     *
      */
     private void songTableInit(ObservableList<Song> songs, TableView<Song> table) {
         // Crea le versioni filtrate e ordinate della tabella
@@ -412,7 +433,9 @@ public class GameController implements Initializable {
             // Cambia lo stato del pulsante e allinea il contatempo al tempo reale
             song.getPlayer().setOnPaused(() -> {
                 updateTimeKeeper(song.getPlayer().getCurrentTime());
-                if (freeGameSwitch.isPressed()) enableGameValutationInterface(true);
+                if (freeGameSwitch.isPressed()) {
+                    enableGameValutationInterface(true);
+                }
                 playButton.setText("Play");
             });
 
@@ -446,14 +469,14 @@ public class GameController implements Initializable {
                 Duration newStep = Duration.ZERO.add(timerStep);
                 int i = 1;
                 while (newStep.lessThan(song.getDuration())) {
-                    Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Aggiungo un marker per il timer a {0}/{1} ", new Object[]{newStep.toSeconds(),song.getDuration()});
+                    Logger.getLogger(GameController.class.getName()).log(Level.INFO, "Aggiungo un marker per il timer a {0}/{1} ", new Object[]{newStep.toSeconds(), song.getDuration()});
                     marker.put(new StringBuffer()
                             .append("SarabandaStop ")
                             .append(i++)
-                            .toString(), 
+                            .toString(),
                             newStep);
                     newStep = newStep.add(timerStep);
-                }                        
+                }
             } else {
                 // Abilita la modifica del timer e disabilita la progressbar
                 timerValue.setDisable(false);
@@ -472,7 +495,9 @@ public class GameController implements Initializable {
          Riabilita l'interfaccia per far partire il brano. Se il gameplay è forzato l'interfaccia rimane disabilitata
          fino alla scelta del prossimo brano
          */
-        if (!freeGameSwitch.isPressed()) enablePlayerInterface(true);
+        if (!freeGameSwitch.isPressed()) {
+            enablePlayerInterface(true);
+        }
 
         // Disabilita i pulsanti per la gestione delle risposte
         enableGameValutationInterface(false);
@@ -569,7 +594,8 @@ public class GameController implements Initializable {
 
         // Imposta i push button non premuti con in errore
         //SarabandaSlaveController.getInstance().errorUnpressedPushButton();
-        // TODO Esegue suono di vittoria
+        correctMediaPlayer.play();
+        
         // Chiude la canzone corrente e resetta l'interfaccia
         game.stop();
         currentSong.okProperty().setValue(true);
@@ -586,7 +612,8 @@ public class GameController implements Initializable {
         // Invia un comando di errore al master del sarabanda
         SarabandaSlaveController.getInstance().sendSarabandaError();
 
-        // TODO Esegue suono di errore
+        errorMediaPlayer.play();
+        
         // Disabilita i pulsanti per la valutazione
         enableGameValutationInterface(false);
         // Riabilita l'interfaccia per eseguire il brano, in questo caso è necessario dare la possibile di continuare
@@ -617,7 +644,9 @@ public class GameController implements Initializable {
 
         // Forsa lo stato dei pulsanti in errore con il doppio scopo di dare un segno visuale e bloccare i pulsanti
         //SarabandaSlaveController.getInstance().errorUnpressedPushButton();
-        // TODO Esegue il suono dell'errore finale
+        
+        timeoutMediaPlayer.play();
+        
         // Chiude il gioco e resetta l'interfaccia
         game.stop();
         currentSong.koProperty().setValue(true);
@@ -665,8 +694,7 @@ public class GameController implements Initializable {
      *
      * @return
      */
-    private Duration getTimerValue
-        () {
+    private Duration getTimerValue() {
         return Duration.seconds(Double.parseDouble(timerValue.textProperty().getValue()));
     }
 

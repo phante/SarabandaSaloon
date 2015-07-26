@@ -16,7 +16,7 @@
 package com.phante.sarabandasaloon.ui;
 
 import com.phante.sarabandasaloon.entity.Game;
-import com.phante.sarabandasaloon.entity.PreferencesUtility;
+import com.phante.sarabandasaloon.entity.Preferences;
 import com.phante.sarabandasaloon.entity.Song;
 import com.phante.sarabandasaloon.entity.TrackList;
 import com.phante.sarabandasaloon.entity.TrackListWrapper;
@@ -406,7 +406,7 @@ public class TrackListController implements Initializable {
         Platform.runLater(() -> {
 
             trackListArray.clear();
-            File configPath = new File(PreferencesUtility.get(PreferencesUtility.BASE_PATH));
+            File configPath = new File(Preferences.getInstance().getBasePath());
 
             // Creo la directory se non esiste
             if (!configPath.exists()) {

@@ -95,7 +95,7 @@ public class TrackList {
         StringBuilder strBuf = new StringBuilder();
         String trackListName = name.toLowerCase().replace(" ", "_");
 
-        File configPath = new File(PreferencesUtility.get(PreferencesUtility.BASE_PATH));
+        File configPath = new File(Preferences.getInstance().getBasePath());
 
         strBuf.append(configPath.getPath())
                 .append("//")
